@@ -1,0 +1,6 @@
+plots/*
+mat/*
+doc/*
+*.asv
+*.*~
+__pycache__
