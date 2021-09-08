@@ -64,9 +64,9 @@ def FR_ODE(pa):
     if "cobs" in pa: C1['Y']=np.transpose(pa['cobs'].dot(sol.y));
 
     if not("fmax" in pa):        pa['fmax']=1e10;
-    
-    plot.figure(num=20);plot.clf(); plot2D(C1,gf=20)
-    plot.figure(num=2);plot.clf(); plotFourier(C1,gf=2,fmax=pa['fmax'])
+    if not("tlim" in pa):        pa['tlim']=[];
+    plot.figure(num=20);plot.clf(); plot2D(C1,gf=20,xlim=pa['tlim'])
+    plot.figure(num=2); plot.clf(); plotFourier(C1,gf=2,fmax=pa['fmax'])
   
 
 #%%  Compute eigenvalues and eigenvectors (multiple DOF)
@@ -76,15 +76,19 @@ def eig(K,M=[]):
     return [vals[idx], vecs[:,idx]] 
 
 
+
+
+
 #%%  Plot 2D figures 
 def plot2D(xyplot,style='-',xscale='linear',yscale='linear',xlim=[],ylim=[],gf=1,clf=0):
     plot.figure(num=gf);
     plot.plot(xyplot['X'],xyplot['Y'],style)
-    plot.xlabel(xyplot['Xlabel']);plot.ylabel(xyplot['Ylabel'])   
-    if 'legend' in xyplot.keys(): plot.legend(xyplot['legend'])   
-    plot.grid();plot.xscale(xscale);plot.yscale(yscale);
-    if len(xlim)>0: plot.xlim(xlim)
-    if len(ylim)>0: plot.ylim(ylim)
+    plot.xlabel(xyplot['Xlabel']);plot.ylabel(xyplot['Ylabel'])  
+ 
+    if ('legend' in xyplot.keys()): plot.legend(xyplot['legend'])   
+    plot.grid(); ax=plot.gca();ax.set_xscale(xscale); ax.set_yscale(yscale)
+    if len(xlim)>0: ax.set_xlim(xlim)
+    if len(ylim)>0: ax.set_ylim(ylim)
     plot.show()    
 
 #%%  Plot Bode 
@@ -207,7 +211,7 @@ def q4():
 #------------------------------------------------------------------------------
 
 
-def q6():
+def q7b(nout=0):
     
  #%% parameters 2 DOF system
  pb=dict([('m',1500.),('a',1.2), ('b',1.4),     #2 DOF
@@ -223,26 +227,53 @@ def q6():
  M=np.array([[pb['m'],0],[0.,pb['m']*(pb['a']+pb['b'])**2/2.]]);
  K=np.array([ [pb['ka']+pb['kb'], -pb['a']*pb['ka']+pb['b']*pb['kb']],
             [-pb['a']*pb['ka']+pb['b']*pb['kb'], pb['ka']*pb['a']**2+pb['kb']*pb['b']**2] ])
- print("M= ",M);print(' ');print("K= ",K)
+ if nout==0: print("M= ",M);print(' ');print("K= ",K)
 
 
- #%% determine modes
+ #%% determine modes  (are these mass normalized ?)
  vals, vecs = eig(K,M)
- print("Eigenvalues (Hz): ",vals/2/np.pi)
+ if nout==0: print("Eigenvalues (Hz): ",vals/2/np.pi)
+ else:
+   return pb,vals,vecs,M,K
 
-# missing : normalize modes, express transfer, add modal damping
+
+def q7d(nout=0):
+ # Forcced response
+ # On paper : normalize modes, express transfer, add modal damping
+ 
+ [pb,vals,vecs,M,K]=q7b(nout=1);
  #%% add damping
- C=1e-3*K;print("C= ",C)
+ C=1e-3*K
+ if nout==0: print("C= ",C)
  
  pb['A']= np.block([[np.zeros((2,2)),np.eye(2)],
       [linalg.solve(M,-K),linalg.solve(M,-C) ]])
  pb['B']=np.block([[np.zeros((2,1))],[linalg.solve(M,np.array([[1.],[0.]]))]]);
  pb['Tend']=200;pb['dt']=1e-2;pb['x0']=[1,.1,0,0]; 
- pb['cobs']=np.array([[1,1,0,0]]);  pb['fmax']=30/2/np.pi;
+ pb['cobs']=np.array([[1,1,0,0]]);  
+ pb['fmax']=30/2/np.pi;
+
+ if nout==0: 
+   plot.figure(num=20);plot.clf(); FR_ODE(pb)
+ else: 
+   return pb,vals,vecs,M,K
+
+def q7e():
+ # Modal amplitudes in time and frequency domain
+ 
+ [pb,vals,vecs,M,K]=q7d(nout=1);
+ un1=vecs[:,0].T@M@vecs[:,0]
+ un2=vecs[:,1].T@M@vecs[:,1]
+ un3=vecs[:,0].T@M@vecs[:,1]
+ print('? = ',un1,un2,un3) #what are these values 
+ pb['cobs']=np.array([np.concatenate((vecs[:,0].T@M/np.sqrt(un1),np.array([0,0])),axis=0),
+   np.concatenate((vecs[:,1].T@M/np.sqrt(un2),np.array([0,0])),axis=0)
+   ]);  
+ pb['fmax']=30/2/np.pi;pb['tlim']=np.array([0,10])
  plot.figure(num=20);plot.clf(); FR_ODE(pb)
 
     
-q6()    
+q7e()    
     
     
     
