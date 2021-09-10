@@ -2,19 +2,23 @@
 """
 ARTS ET METIERS - FITE 2A - VIBRATIONS - ED1/2
     OSCILLATEUR LINEAIRE A 1 et 2 DDL 
-
-Preferences:Ipython console:Graphis:Backend:Automatic
-% import scipy:scipy.__version__
     
-Start with runfile('mevib12.py')
+Start with 
+  cd  YourOwnPath 
+  runfile('mevib12.py')
 
 Contributed by E. Monteiro and E. Balmes
+Copyright (c) 2018-2021 by ENSAM, All Rights Reserved.
 """
 import numpy as np
 import scipy.integrate as integrate
+import matplotlib as matplotlib
 import matplotlib.pyplot as plot
-from scipy.linalg import eig as seig
+
 import scipy.linalg as linalg
+from mevib import feeig,plot2D,plotFourier,plotFreq 
+# on change import importlib; importlib.reload(mevib)
+
 
 #------------------------------------------------------------------------------
 #
@@ -65,69 +69,10 @@ def FR_ODE(pa):
 
     if not("fmax" in pa):        pa['fmax']=1e10;
     if not("tlim" in pa):        pa['tlim']=[];
-    plot.figure(num=20);plot.clf(); plot2D(C1,gf=20,xlim=pa['tlim'])
-    plot.figure(num=2); plot.clf(); plotFourier(C1,gf=2,fmax=pa['fmax'])
-  
-
-#%%  Compute eigenvalues and eigenvectors (multiple DOF)
-def eig(K,M=[]):
-    vals2, vecs = seig(K,M) if len(M)>0 else seig(K)
-    vals=np.real(np.sqrt(vals2));idx=np.argsort(vals)
-    return [vals[idx], vecs[:,idx]] 
-
-
-
-
-
-#%%  Plot 2D figures 
-def plot2D(xyplot,style='-',xscale='linear',yscale='linear',xlim=[],ylim=[],gf=1,clf=0):
-    plot.figure(num=gf);
-    plot.plot(xyplot['X'],xyplot['Y'],style)
-    plot.xlabel(xyplot['Xlabel']);plot.ylabel(xyplot['Ylabel'])  
- 
-    if ('legend' in xyplot.keys()): plot.legend(xyplot['legend'])   
-    plot.grid(); ax=plot.gca();ax.set_xscale(xscale); ax.set_yscale(yscale)
-    if len(xlim)>0: ax.set_xlim(xlim)
-    if len(ylim)>0: ax.set_ylim(ylim)
-    plot.show()    
-
-#%%  Plot Bode 
-def plotFreq(xy,style='-',xscale='linear',yscale='log',xlim=[],ylim=[],gf=1,clf=0):
-
-    f2=plot.figure(num=gf);f2.clf()
-    ax=f2.subplots(1,2,True,False,1)    
-    ax[0].plot(xy['X'],abs(xy['Y']),style)
-    ax[0].set_xlabel(xy['Xlabel']);ax[0].set_ylabel(xy['Ylabel'])   
-    if 'legend' in xy.keys(): plot.legend(xy['legend'])   
-    ax[0].grid();ax[0].set_xscale(xscale);ax[0].set_yscale(yscale);
-    if len(xlim)>0: plot.xlim(xlim)
-    if len(ylim)>0: plot.ylim(ylim)
+    plot2D(C1,gf=20,xlim=pa['tlim'])
+    plotFourier(C1,gf=2,fmax=pa['fmax'])
+    print('Time in figure 20, frequency in figure 2')
     
-    ax[1].plot(xy['X'],np.angle(xy['Y'],deg=True),style);ax[1].grid();
-
-    plot.show()    
-
-
-#%%  Compute Fourier transform an plot
-def plotFourier(xy,tmin=0,tmax=1e10,gf=2,fmax=0):
-   t=xy['X']; y=np.array(xy['Y']);
-   indt=np.logical_and(t>=tmin,t<tmax);indt=indt.reshape(indt.shape[0])
-   t=t[indt];y=y[indt,]; t=t-t[0]; 
-   
-   Y=np.fft.fft(y.T);Y=Y.T; # Y.shape
-   f=np.arange(0.,(y.shape[0]),1,'double')/y.shape[0]/(t[1]-t[0])
-   indf=f<min(fmax,f[len(f)-1]/2); f=f[indf];Y=Y[indf]
-   f2=plot.figure(num=2);f2.clf()
-   ax=f2.subplots(1,2,True,False,1)    
-   ax[0].semilogy(f*2*np.pi,np.abs(Y))
-   ax[0].set_xlabel('Fréquence (rad/s)'); ax[0].set_ylabel('Amplitude')
-   ax[0].grid()
-   ax[1].plot(f*2*np.pi,np.angle(Y,deg=True));ax[1].grid();
-   ax[1].set_yscale('linear');
-   ax[1].set_xlabel('Fréquence (rad/s)');ax[1].set_ylabel('Phase')
-   #ax[1].grid()
-   plot.show()
-
 #------------------------------------------------------------------------------
 #   Part 1: system with 1 degree of freedom
 #------------------------------------------------------------------------------
@@ -135,12 +80,12 @@ def plotFourier(xy,tmin=0,tmax=1e10,gf=2,fmax=0):
     
 #%% State space ODE integration
 def q2d():
- pa=dict([('m',1.),('c',0.2),('k',100),   #1DOF 
+ pa=dict([('m',1.),('c',0.2),('k',100),  #1DOF 
          ('F0',200.0),('a',70.),        #sinusoidal excitation
          ('u0',1.), ('v0',1.),          #initial conditions
-         ('Tend',30.), ('dt',0.1)       #plot limit and time discretisation
+         ('Tend',30.), ('dt',0.05)      #plot limit and time discretisation
          ])
- 
+ # What is the effect of playing with dt and Tend ? 
  FR_ODE(pa)
     
 #%% Modal coordinates transfer  
@@ -158,7 +103,7 @@ def q3():
  H=1/(pa['m']*s*s+pa['c']*s+pa['k']); xy['Y']=H 
 
  #plot Free Response in figure(1)  
- plot.figure(num=1);plot.clf();plotFreq(xy,gf=1)
+ plotFreq(xy,gf=1)
 
  
 #%% Effect of damping on time domain Free Response
@@ -180,7 +125,7 @@ def q4t():
     pa['c']=val_xi[j1]*(2*np.sqrt(pa['k']*pa['m'])) # c= xi * c_crit
     xyplot['Y'][:,j1]=FR_1DOF(pa, xyplot['X'] )  
  #plot Free Response  
- plot.figure(num=20);plot.clf();plot2D(xyplot,gf=20)
+ plot2D(xyplot,gf=20)
 
 
 #%% Effect of damping and frequency on Forced Response
@@ -203,7 +148,7 @@ def q4():
    H=1/(pa['m']*s*s+pa['c']*s+pa['k']);   
    #if (j1==1): xy['Y']=H; else: xy['Y'][:,j1]=H.T
    xy['Y'][:,j1]=H.T
- plot.figure(num=4);plot.clf();plotFreq(xy,gf=4,xscale='log')
+ plotFreq(xy,gf=4,xscale='log')
 
 
 #------------------------------------------------------------------------------
@@ -230,11 +175,10 @@ def q7b(nout=0):
  if nout==0: print("M= ",M);print(' ');print("K= ",K)
 
 
- #%% determine modes  (are these mass normalized ?)
- vals, vecs = eig(K,M)
+ #%% determine modes  (are these mass normalized ? see code in mevib.py)
+ vals, vecs = feeig(K,M)
  if nout==0: print("Eigenvalues (Hz): ",vals/2/np.pi)
- else:
-   return pb,vals,vecs,M,K
+ else:  return pb,vals,vecs,M,K
 
 
 def q7d(nout=0):
@@ -266,14 +210,15 @@ def q7e():
  un2=vecs[:,1].T@M@vecs[:,1]
  un3=vecs[:,0].T@M@vecs[:,1]
  print('? = ',un1,un2,un3) #what are these values 
- pb['cobs']=np.array([np.concatenate((vecs[:,0].T@M/np.sqrt(un1),np.array([0,0])),axis=0),
-   np.concatenate((vecs[:,1].T@M/np.sqrt(un2),np.array([0,0])),axis=0)
+ pb['cobs']=np.array([np.concatenate((vecs[:,0].T@M,np.array([0,0])),axis=0),
+   np.concatenate((vecs[:,1].T@M,np.array([0,0])),axis=0)
    ]);  
  pb['fmax']=30/2/np.pi;pb['tlim']=np.array([0,10])
- plot.figure(num=20);plot.clf(); FR_ODE(pb)
-
-    
-q7e()    
+ FR_ODE(pb) #Analyze time (figure(20)) and frequency (figure(2))
+ 
+ 
+matplotlib.use('qt5agg')#Force separate windows
+q2d()  # run question 2D
     
     
     
