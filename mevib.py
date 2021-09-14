@@ -140,6 +140,7 @@ def RaiseFigure(gf=[]):
    #figure(figsize=(8, 6), dpi=80)
    #plot.gcf()
    cfm = plot.get_current_fig_manager();
-   cfm.window.activateWindow()
-   cfm.window.raise_()
+   if hasattr(cfm,'window'):   
+    cfm.window.activateWindow()
+    cfm.window.raise_()
     

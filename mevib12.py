@@ -217,7 +217,10 @@ def q7e():
  FR_ODE(pb) #Analyze time (figure(20)) and frequency (figure(2))
  
  
-matplotlib.use('qt5agg')#Force separate windows
+matplotlib.use('qt5agg')#Force modern backend
+#Force inline plots use     :   %matplotlib inline 
+#Force separate window  use :  %matplotlib qt
+
 q2d()  # run question 2D
     
     
