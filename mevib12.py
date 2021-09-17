@@ -218,8 +218,8 @@ def q7e():
  
  
 matplotlib.use('qt5agg')#Force modern backend
-#Force inline plots use     :   %matplotlib inline 
-#Force separate window  use :  %matplotlib qt
+#Force inline plots in the console use    :   %matplotlib inline 
+#Force separate window in the console use :  %matplotlib qt
 
 q2d()  # run question 2D
     

@@ -102,7 +102,7 @@ def plot2D(xyplot,style='-',xscale='linear',yscale='linear',xlim=[],ylim=[],gf=1
 def plotFreq(xy,style='-',xscale='linear',yscale='log',xlim=[],ylim=[],gf=1,clf=0):
 
     f2=plot.figure(num=gf);f2.clf()
-    ax=f2.subplots(1,2,True,False,1)    
+    ax=f2.subplots(1,2)    
     ax[0].plot(xy['X'],abs(xy['Y']),style)
     ax[0].set_xlabel(xy['Xlabel']);ax[0].set_ylabel(xy['Ylabel'])   
     if 'legend' in xy.keys(): plot.legend(xy['legend'])   
@@ -125,7 +125,7 @@ def plotFourier(xy,tmin=0,tmax=1e10,gf=2,fmax=0):
    f=np.arange(0.,(y.shape[0]),1,'double')/y.shape[0]/(t[1]-t[0])
    indf=f<min(fmax,f[len(f)-1]/2); f=f[indf];Y=Y[indf]
    f2=plot.figure(num=2);f2.clf()
-   ax=f2.subplots(1,2,True,False,1)    
+   ax=f2.subplots(1,2)    
    ax[0].semilogy(f*2*np.pi,np.abs(Y))
    ax[0].set_xlabel('Fréquence (rad/s)'); ax[0].set_ylabel('Amplitude')
    ax[0].grid()
