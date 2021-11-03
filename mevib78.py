@@ -6,6 +6,7 @@ Copyright 2019, Eric Monteiro, Etienne Balmes
 """
 
 import mevib as mv 
+import feplot
 import numpy as np
 from scipy.linalg import block_diag
 
@@ -44,14 +45,14 @@ def load_poppy(filename='poppyse1.mat', pflag=1):
  ''' Import Poppy model '''
  
  #import from MATLAB/SDT
- mo1 = mv.importSDT(filename)
+ mo1 = feplot.importSDT(filename)
   
  # get superelements
- up = mv.stack_get(mo1,'SE','up')     #upperarm (shoulder -> elbow)  
- fo = mv.stack_get(mo1,'SE','fore')   #forearm  (elbow ->  hand)
+ up = feplot.stack_get(mo1,'SE','up')     #upperarm (shoulder -> elbow)  
+ fo = feplot.stack_get(mo1,'SE','fore')   #forearm  (elbow ->  hand)
 
  # build full poppy
- mo2 = mv.model()
+ mo2 = feplot.model()
  mo2.Node = np.vstack((up.Node,fo.Node))
  mo2.Elt = np.vstack((up.Elt,fo.Elt))
  mo2.dMKu = (up.DOF, up.K[0,0], up.K[0,1]) 
@@ -70,7 +71,7 @@ def load_poppy(filename='poppyse1.mat', pflag=1):
 
  #export for paraview
  if pflag:
-   mv.writePARAVIEW(mo2,[],filename='poppy_mesh1.vtk')
+   feplot.writePARAVIEW(mo2,[],filename='poppy_mesh1.vtk')
   
  #output
  return mo2
@@ -92,11 +93,11 @@ def q1(mo2=[], kj=0., pflag=1):
   
  # compute modes
  M,K,Ks = matrix_assembly(mo2)
- [w,phi] = mv.eig(K+kj*Ks, M); f = w/(2.*np.pi)
+ [w,phi] = mv.feeig(K+kj*Ks, M); f = w/(2.*np.pi)
  #def1=res(DOF=DOF,Def=p,data=f.reshape((13,1)))
  mo2.TR['val'] = mo2.TR['Def'] @ phi
  if pflag:
-  mv.writePARAVIEW(mo2,mo2.TR,filename='results1.vtk')
+  feplot.writePARAVIEW(mo2,mo2.TR,filename='results1.vtk')
 
  return f, phi
 
@@ -119,10 +120,10 @@ def q2(mo2=[], kj=0., add_m=0., Nt=20, pflag=0):
     MROT = block_diag(ROT,ROT,ROT,ROT)
     M,K,Ks = matrix_assembly(mo2, add_m, MROT)    
     #compute modes
-    [w,phi] = mv.eig(K+kj*Ks,M); f = w/(2.*np.pi)
+    [w,phi] = mv.feeig(K+kj*Ks,M); f = w/(2.*np.pi)
     mo2.TR['val'] = mo2.TR['Def'] @ phi; xyplot['Y'][j1,:]=f
     if pflag:
-     mv.writePARAVIEW(mo2,mo2.TR,filename='results_TH{:2d}.vtk'.format(int(a)))
+     feplot.writePARAVIEW(mo2,mo2.TR,filename='results_TH{:2d}.vtk'.format(int(a)))
     
  mv.plot2D(xyplot,yscale='log',ylim=[3.0e0,1.0e3])
  
@@ -142,10 +143,10 @@ def q3(mo2=[], add_m=0., Nk=20, pflag=0):
              ('Y',np.zeros((kj.size,mo2.TR['Def'].shape[1]))) ])  
  
  for j1 in range(kj.size):
-    [w,phi]=mv.eig(K+kj[j1]*Ks,M); f = w/(2.*np.pi)
+    [w,phi]=mv.feeig(K+kj[j1]*Ks,M); f = w/(2.*np.pi)
     mo2.TR['val'] = mo2.TR['Def'] @ phi; xyplot['Y'][j1,:]=f
     if pflag:
-     mv.writePARAVIEW(mo2,mo2.TR,filename='results_KS{:2d}.vtk'.format(int(kj[j1])))
+     feplot.writePARAVIEW(mo2,mo2.TR,filename='results_KS{:2d}.vtk'.format(int(kj[j1])))
         
  mv.plot2D(xyplot,yscale='log')    
 
@@ -160,8 +161,8 @@ def q3d(mo2=[], idmode=1, add_m=0.0):
     mo2 = load_poppy(pflag=0)   
   
  M,K,Ks = matrix_assembly(mo2, add_m)
- [w,p] = mv.eig(K+100*Ks,M); X1=p[:,idmode-1:idmode]; #Shape of first mode
- [w1,p1] = mv.eig(K+1000*Ks,M); f1=w1/(2.*np.pi)
+ [w,p] = mv.feeig(K+100*Ks,M); X1=p[:,idmode-1:idmode]; #Shape of first mode
+ [w1,p1] = mv.feeig(K+1000*Ks,M); f1=w1/(2.*np.pi)
  fr=np.sqrt(X1.T @ (K+1000*Ks) @ X1)/ (X1.T @ M @ X1) / (2.*np.pi)
 
  print(f1[0],fr[0,0],np.abs(f1[0]/fr[0,0]-1.)*100.)
@@ -176,8 +177,8 @@ def q3e(mo2=[], kj=1.e3, add_m=0.0):
     mo2 = load_poppy(pflag=0) 
  
  M,K,Ks = matrix_assembly(mo2, add_m)  
- [w,p] = mv.eig(K+kj*Ks,M); f=w/(2.*np.pi);
- [w1,p1] = mv.eig(K*100+kj*Ks,M); f1=w1/(2.*np.pi);
+ [w,p] = mv.feeig(K+kj*Ks,M); f=w/(2.*np.pi);
+ [w1,p1] = mv.feeig(K*100+kj*Ks,M); f1=w1/(2.*np.pi);
  
  print('f  =',f[:4],'\nfr =',f1[:4],'\ndf =',(f1[:4]/f[:4]-1)*100.)    
     
@@ -215,7 +216,7 @@ def q4(mo2=[], kj=1.e3, add_m=430.0e-6):
     
  xi=0.01;freq=np.linspace(0,300,5000);w=freq*2.*np.pi;
  M,K,Ks = matrix_assembly(mo2,add_m); in1=9;out1=[9,3,10];
- [wk,pk]=mv.eig(K+kj*Ks,M);  
+ [wk,pk]=mv.feeig(K+kj*Ks,M);  
  
  xyplot=dict([('X',freq), ('Xlabel','Frequency'),
              ('Y',np.zeros((freq.size,2))),('Ylabel',['Amplitude','Moment']) ]) 
