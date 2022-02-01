@@ -5,7 +5,8 @@ ARTS ET METIERS - FITE 2A - VIBRATIONS - ED1/2
     
 Start with 
   cd  YourOwnPath 
-  runfile('mevib12.py')
+  from mevib12 import *
+  q2d()  # or another questions
 
 Contributed by E. Monteiro and E. Balmes
 Copyright (c) 2018-2021 by ENSAM, All Rights Reserved.
@@ -85,8 +86,9 @@ def q2d():
          ('u0',1.), ('v0',1.),          #initial conditions
          ('Tend',30.), ('dt',0.05)      #plot limit and time discretisation
          ])
- # What is the effect of playing with dt and Tend ? 
  FR_ODE(pa)
+ # What is the effect of playing with dt and Tend ? you can do it with
+ # pa['dt']=.05;pa['Tend']=5;FR_ODE(pa)
     
 #%% Modal coordinates transfer  
 def q3():

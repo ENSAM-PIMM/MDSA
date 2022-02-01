@@ -126,7 +126,7 @@ def plotFourier(xy,tmin=0,tmax=1e10,gf=2,fmax=0):
    indf=f<min(fmax,f[len(f)-1]/2); f=f[indf];Y=Y[indf]
    f2=plot.figure(num=2);f2.clf()
    ax=f2.subplots(1,2)    
-   ax[0].semilogy(f*2*np.pi,np.abs(Y))
+   ax[0].semilogy(f*2*np.pi,np.abs(Y),':.')
    ax[0].set_xlabel('Fréquence (rad/s)'); ax[0].set_ylabel('Amplitude')
    ax[0].grid()
    ax[1].plot(f*2*np.pi,np.angle(Y,deg=True));ax[1].grid();

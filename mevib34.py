@@ -3,7 +3,12 @@
 ARTS ET METIERS - FITE 2A - VIBRATIONS - ED3/4
     Modes propres et couplage de sous-systèmes  
     
-Start with runfile('mevib34.py')
+Start with 
+   from mevib34 import *
+   q1()
+   q2()
+   q3()
+   q4()
 
 Contributed by E. Monteiro and E. Balmes
 """
@@ -13,6 +18,7 @@ import matplotlib.pyplot as plot
 import matplotlib.animation as animation
 import scipy.linalg as linalg
 import scipy.sparse as sparse
+from mevib import feeig,plot2D,plotFourier,plotFreq 
 
 #------------------------------------------------------------------------------
 #
@@ -70,31 +76,7 @@ def anim_mode(res, idmode=2, nframe=50, ncycle=10, fact=1e-1):
  plot.show()
  return ani1
 
-#%%  Plot 2D figures 
-def plot2D(xyplot,style='-',xscale='linear',yscale='linear',xlim=[],ylim=[],gf=1,clf=0):
-    plot.figure(num=gf);plot.clf();
-    plot.plot(xyplot['X'],xyplot['Y'],style)
-    plot.xlabel(xyplot['Xlabel']);plot.ylabel(xyplot['Ylabel'])   
-    if 'legend' in xyplot.keys(): plot.legend(xyplot['legend'])   
-    plot.grid();plot.xscale(xscale);plot.yscale(yscale);
-    if len(xlim)>0: plot.xlim(xlim)
-    if len(ylim)>0: plot.ylim(ylim)
-    plot.show() 
-#%%  Plot Bode 
-def plotFreq(xy,style='-',xscale='linear',yscale='log',xlim=[],ylim=[],gf=1,clf=0):
 
-    f2=plot.figure(num=gf);f2.clf()
-    ax=f2.subplots(1,2,True,False,1)    
-    ax[0].plot(xy['X'],abs(xy['Y']),style)
-    ax[0].set_xlabel(xy['Xlabel']);ax[0].set_ylabel(xy['Ylabel'])   
-    if 'legend' in xy.keys(): plot.legend(xy['legend'])   
-    ax[0].grid();ax[0].set_xscale(xscale);ax[0].set_yscale(yscale);
-    if len(xlim)>0: plot.xlim(xlim)
-    if len(ylim)>0: plot.ylim(ylim)
-    
-    ax[1].plot(xy['X'],np.angle(xy['Y'],deg=True),style);ax[1].grid();
-
-    plot.show()    
 
 #------------------------------------------------------------------------------
 #
@@ -221,7 +203,8 @@ def q4():
                 ('k1',0.0),('k2',0),('k3',1000.)]),pflag=False)
  dK=.1* phi.T @ mo2['K'] @ phi
  v=np.diag(dK)/res['w']/res['w']/2 # What is this ?
- [ld2,psi]=linalg.eig(phi.T@(mo1['K']+.1j*mo2['K'])@phi);ld=np.sqrt(ld2)
+ [ld2,psi]=linalg.eig(-phi.T@(mo1['K']+0.1j*mo2['K'])@phi);ld=np.sqrt(ld2)
+ print(np.real(ld)/np.abs(ld)) #What is this ? why are two values close to 0 ?
  
 
  # additional (future) questions
