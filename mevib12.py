@@ -101,7 +101,7 @@ def q3():
  xy=dict([('X',np.linspace(0,w0*2,100)),  
              ('Xlabel','Frequency (rad/s)'), ('Y',''), ('Ylabel','Displacement (m)') ])
  #compute forced response
- s=xy['X']*np.complex(0.,1); 
+ s=xy['X']*complex(0.,1); 
  H=1/(pa['m']*s*s+pa['c']*s+pa['k']); xy['Y']=H 
 
  #plot Free Response in figure(1)  
@@ -141,7 +141,7 @@ def q4():
  val_f = np.linspace(.1,1.0e1,100);
 
  #compute Forced Response frequency domain
- s=val_f*np.complex(0.,1); 
+ s=val_f*complex(0.,1); 
  xy=dict([('X',val_f/w0),('Xlabel','a/w0'), ('Y',[]), 
           ('Ylabel','Amplitude (m)'), ('legend',val_xi) ])
  xy['Y']=np.zeros((len(xy['X']),len(val_xi)),dtype=np.complex_)
@@ -150,7 +150,7 @@ def q4():
    H=1/(pa['m']*s*s+pa['c']*s+pa['k']);   
    #if (j1==1): xy['Y']=H; else: xy['Y'][:,j1]=H.T
    xy['Y'][:,j1]=H.T
- plotFreq(xy,gf=4,xscale='log')
+ plotFreq(xy,gf=4,xscale='log');print("Amplitude phase in figure(4)")
 
 
 #------------------------------------------------------------------------------
@@ -225,5 +225,6 @@ matplotlib.use('qt5agg')#Force modern backend
 
 q2d()  # run question 2D
     
+print("Run other questions using q3(), q4(), q4t()")
     
     

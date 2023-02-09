@@ -5,9 +5,11 @@ ED56 VIBRATIONS - FITE 2A - ARTS ET METIERS
 Copyright 2019-2021, Eric Monteiro, Etienne Balmes
 """
 
-from mevib import * # Import all functions with no root
+from mevib import compute_section,plot_bode,plot2D,quad_seg,feeig
 import numpy as np
-
+from numpy import cos,cosh,sin,sinh 
+from scipy.optimize import root
+from feplot import model,anim1D_mode
 
 # pa : parameter dictionnary 
 pa=dict([('L',1),('h',.01),('b',.01),('E',200.0e9),('rho',7800.),('section','rect'),('Ne',40) ])
@@ -27,16 +29,16 @@ L= pa['L']; EI = pa['E']*pa['I'];
 for j1 in range(len(xyplot['X'])):
     k = (rsEI*(xyplot['X'][j1]*2.*np.pi)**2)**0.25
     #compute boundary conditions
-    u0 = np.array([ np.cos(k*0.), np.sin(k*0.), np.cosh(k*0.), np.sinh(k*0.)])
-    r0 = np.array([-np.sin(k*0.), np.cos(k*0.), np.sinh(k*0.), np.cosh(k*0.)])*k
-    mL = np.array([ -np.cos(k*L), -np.sin(k*L),  np.cosh(k*L),  np.sinh(k*L)])*EI*k**2
-    tL = np.array([  np.sin(k*L), -np.cos(k*L),  np.sinh(k*L),  np.cosh(k*L)])*-EI*k**3
+    u0 = np.array([ cos(k*0.), sin(k*0.), cosh(k*0.), sinh(k*0.)])
+    r0 = np.array([-sin(k*0.), cos(k*0.), sinh(k*0.), cosh(k*0.)])*k
+    mL = np.array([ -cos(k*L), -sin(k*L),  cosh(k*L),  sinh(k*L)])*EI*k**2
+    tL = np.array([  sin(k*L), -cos(k*L),  sinh(k*L),  cosh(k*L)])*-EI*k**3
     #compute coefficients
     M, F = np.array([u0, r0, mL, tL]), np.array([0,0,1,0])
     coef = np.linalg.solve(M, F)
     #compute physical quantities
-    uL = np.array([ np.cos(k*L), np.sin(k*L), np.cosh(k*L), np.sinh(k*L)])
-    m0 = np.array([ -np.cos(k*0.), -np.sin(k*0.),  np.cosh(k*0.),  np.sinh(k*0.)])*EI*k**2
+    uL = np.array([ cos(k*L), sin(k*L), cosh(k*L), sinh(k*L)])
+    m0 = np.array([ -cos(k*0.), -sin(k*0.),  cosh(k*0.),  sinh(k*0.)])*EI*k**2
     xyplot['Y'][j1,0:2]=np.dot(np.array([uL,m0]),coef)
     xyplot['Y'][j1,2]=np.linalg.det(M)
 #plot transfer (use 0,1,2 to select output)
@@ -46,15 +48,16 @@ plot_bode(xyplot,0)
 #------------------------------------------------------------------------------
 #%% Q4 : Analytical modes
 #------------------------------------------------------------------------------
-det1=lambda x: 1.+np.cos(x)*np.cosh(x)
+det1=lambda x: 1.+cos(x)*cosh(x)
 sol1=root(det1,6.);k1=sol1['x'][0]/L; #seek roots using scipy.optimize.root
-u0 = np.array([ np.cos(k1*0.), np.sin(k1*0.), np.cosh(k1*0.), np.sinh(k1*0.)])
-r0 = np.array([-np.sin(k1*0.), np.cos(k1*0.), np.sinh(k1*0.), np.cosh(k1*0.)])*k1
-mL = np.array([ -np.cos(k1*L), -np.sin(k1*L),  np.cosh(k1*L),  np.sinh(k1*L)])*EI*k1**2
-tL = np.array([  np.sin(k1*L), -np.cos(k1*L),  np.sinh(k1*L),  np.cosh(k1*L)])*-EI*k1**3
-M=np.array([u0, r0, mL, tL]);u,s,v=svd(M);coef = v[-1,:];#np.dot(M,coef)
+u0 = np.array([ cos(k1*0.), sin(k1*0.), cosh(k1*0.), sinh(k1*0.)])
+r0 = np.array([-sin(k1*0.), cos(k1*0.), sinh(k1*0.), cosh(k1*0.)])*k1
+mL = np.array([ -cos(k1*L), -sin(k1*L),  cosh(k1*L),  sinh(k1*L)])*EI*k1**2
+tL = np.array([  sin(k1*L), -cos(k1*L),  sinh(k1*L),  cosh(k1*L)])*-EI*k1**3
+M=np.array([u0, r0, mL, tL]);u,s,v=np.linalg.svd(M);coef = v[-1,:];#np.dot(M,coef)
 xyplot=dict([('X',np.linspace(0.,L,100)), ('Xlabel','x (m)'), ('Y',[]), ('Ylabel','Displacement') ])
-xyplot['Y']= coef[0]*np.cos(k1*xyplot['X'])+coef[1]*np.sin(k1*xyplot['X'])+coef[2]*np.cosh(k1*xyplot['X'])+coef[3]*np.sinh(k1*xyplot['X'])
+xyplot['Y']= coef[0]*cos(k1*xyplot['X'])+coef[1]*sin(k1*xyplot['X'])+coef[2]*cosh(k1*xyplot['X'])+  \
+     coef[3]*sinh(k1*xyplot['X'])
 plot2D(xyplot)
 
 
