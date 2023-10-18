@@ -211,7 +211,7 @@ def q7e():
  un1=vecs[:,0].T@M@vecs[:,0]
  un2=vecs[:,1].T@M@vecs[:,1]
  un3=vecs[:,0].T@M@vecs[:,1]
- print('? = ',un1,un2,un3) #what are these values 
+ print('? = ',un1,un2,un3) #what are these values== 
  pb['cobs']=np.array([np.concatenate((vecs[:,0].T@M,np.array([0,0])),axis=0),
    np.concatenate((vecs[:,1].T@M,np.array([0,0])),axis=0)
    ]);  

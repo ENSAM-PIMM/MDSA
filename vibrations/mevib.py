@@ -4,7 +4,7 @@
  Utilities for MEVIB Course
   
 Contributed by E. Monteiro and E. Balmes
-Copyright (c) 2018-2021 by ENSAM, All Rights Reserved.
+Copyright (c) 2018-2024 by ENSAM, All Rights Reserved.
 '''
 
 import matplotlib.pyplot as plot
@@ -21,7 +21,7 @@ def feeig(K,M=[],norm='M'):
     om=np.sqrt(om2);om=om.real;idx=np.argsort(om)
     val=om[idx];phi=vecs[:,idx]
     #Use mass normalization
-    if norm=='M':
+    if norm=='M' and len(M)>0:
      gm=np.sqrt(np.diag(phi.T @ M @ phi)); 
      fact=np.reshape(np.tile(1./gm,gm.size),[gm.size,gm.size])
      phi=np.multiply(phi,fact)
@@ -91,11 +91,17 @@ def plot2D(xyplot,style='-',xscale='linear',yscale='linear',xlim=[],ylim=[],gf=1
     plot.xlabel(xyplot['Xlabel']);plot.ylabel(xyplot['Ylabel'])  
  
     if ('legend' in xyplot.keys()): plot.legend(xyplot['legend'])   
+    if ('title' in xyplot.keys()): plot.title(xyplot['title']) 
     plot.grid(); ax=plot.gca();ax.set_xscale(xscale); ax.set_yscale(yscale)
     if len(xlim)>0: ax.set_xlim(xlim)
     if len(ylim)>0: ax.set_ylim(ylim)
     plot.show();RaiseFigure()
 
+def plot2D1(xyplot,style='-', log_x=False, log_y=False, xlim=[],ylim=[],gf=1,clf=0):
+    ''' Plot 2D curves  with plotly ''' 
+    f2 = px.line(x=xyplot['X'],y=xyplot['Y'], log_x=log_x, log_y=log_y,
+                 range_x=xlim, range_y=ylim, line_shape='linear')
+    f2.show()
 
 #%%  Plot Bode from frequency response
 def plotFreq(xy,style='-',xscale='linear',yscale='log',xlim=[],ylim=[],gf=1,clf=0):

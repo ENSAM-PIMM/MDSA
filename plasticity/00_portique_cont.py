@@ -93,7 +93,7 @@ def sketch2D(param):
 	le1=s1.geometry.keys();lv1=[[7,8,-2,-1],[9,10,1,-2]]; #,[3,4,2,-1],[4,5,1,2],[8,9,2,-1],[9,0,1,2]
 	for v1 in lv1:
 	  e1=s1.geometry[le1[v1[0]]];e2=s1.geometry[le1[v1[1]]];xy=e1.getVertices()[1].coords	  
-	  s1.FilletByRadius(radius=param['radF'], curve1=e1, nearPoint1=(xy[0],xy[1]), curve2=e2, nearPoint2=(xy[0],xy[1]))
+	  s1.FilletByRadius(radius=param['radF']-param['thickness'], curve1=e1, nearPoint1=(xy[0],xy[1]), curve2=e2, nearPoint2=(xy[0],xy[1]))
 	
 	return s1
 	

@@ -18,29 +18,13 @@ import matplotlib.pyplot as plot
 import matplotlib.animation as animation
 import scipy.linalg as linalg
 import scipy.sparse as sparse
-from mevib import feeig,plot2D,plotFourier,plotFreq 
+from mevib import cosd,sind,feeig,plot2D,plotFourier,plotFreq 
 
 #------------------------------------------------------------------------------
 #
 #   Part 0: predefined functions
 #
 #------------------------------------------------------------------------------
-#%% Basics
-cosd = lambda x : np.cos(np.radians(x))
-sind = lambda x : np.sin(np.radians(x)) 
-
-#%%  Compute eigenvalues and eigenvectors (multiple DOF)
-def KMeig(K,M=[]):
-    omega2, phi = linalg.eig(K,M) if len(M)>0 else linalg.eig(K)
-    
-    # What is the purpose of this ? 
-    #print(phi) 
-    muj=np.diag(phi.transpose().dot(M.dot(phi)))
-    phi=phi.dot(np.diag(np.power(muj,-.5)))
-
-    om=np.real(np.sqrt(omega2));idx=np.argsort(om)
-    return dict([("w",om[idx]),("phi",phi[:,idx])]) 
-
 #%% Animate modes
 def anim_mode(res, idmode=2, nframe=50, ncycle=10, fact=1e-1):  
  # model 
@@ -112,7 +96,7 @@ def q1(pa=[], pflag=True):
 #------------------------------------------------------------------------------
 #%%   Question 2: modes
 #------------------------------------------------------------------------------
-def q2(pa=[], pflag=True):
+def q2(pa=[], idmode=1, pflag=True):
  # parameters 4 DOF system
  if type(pa)==list:
   pa=dict([('m',10.),('L',1.),('a',45.),           #mass, length, angle 
@@ -120,12 +104,13 @@ def q2(pa=[], pflag=True):
          ('Tend',10.), ('dt',0.1)               #plot limit and time discretisation
          ])
  # compute modes
- mo1 = q1(pa, pflag=False)
- res = KMeig(mo1['K'], mo1['M'])  
+ mo1 = q1(pa, pflag=False);res={};
+ res['w'], res['phi'] = feeig(mo1['K'], mo1['M'])  
  # run anim
  if pflag:
   print("omega=", res['w']);print(' ');print("phi= ", res['phi'])
-  anim_mode(res, idmode=1, nframe=50, ncycle=10, fact=1.e-1)
+  anim1=anim_mode(res, idmode, nframe=50, ncycle=10, fact=1.e-1)
+  return anim1
  else:
   return res
 
