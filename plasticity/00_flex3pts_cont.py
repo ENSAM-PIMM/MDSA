@@ -18,15 +18,15 @@ import numpy as np
 Mdb()
 
 #---------------------------------------------------------------------------
-#%% PARAMETERS (unit: MM)
+#%% PARAMETERS (unit: MM-MPa)
 #---------------------------------------------------------------------------
 #choice of the model (1-beam; 2-solid2D; 3-solid3D)
-idim=3
-#name, dimensions of the sample [X,Y,Z], radius of cylinder, gap between fix points, 
+idim=1
+#name, dimensions of the sample [X,Y,Z], radius of cylinder, space between fix points, 
 #size of elements, linear/quadratic interpolation (False/True), plane strain/stress in 2D ('strain'/'stress')
 param=dict([('name','sample'),('dim',[400., 12., 12.]), ('rad',5.), ('base',290.),
   ('selt',2.),('quad',True), ('type2d','stress') ])
-#name, density, Young modulus, Poisson ratio, initial yield stress, linear isotropic hardening coefficient 
+#name, Density, Young modulus, Poisson ratio, initial yield stress, linear isotropic hardening coefficient 
 mat=dict([('name','steel'),('dens',7850.e-12),('E',2.1e5),('nu',0.3),('Re',200.),('E1',1.0e3)])
 #imposed displacement
 simu=dict([('dmax',30.)])
@@ -90,7 +90,7 @@ def cylinder2D(namec,xc,yc,rc):
 	#mesh 
 	elemType1 = mesh.ElemType(elemCode=R2D2, elemLibrary=STANDARD)
 	p1.setElementType(regions=(p1.surfaces[namec].edges,), elemTypes=(elemType1, ))
-	p1.seedPart(size=param['selt'], deviationFactor=0.01, minSizeFactor=0.01)
+	p1.seedPart(size=param['rad']/5., deviationFactor=0.01, minSizeFactor=0.01)
 	p1.generateMesh()
 	
 	return p1
@@ -115,7 +115,7 @@ def cylinder3D(namec,xc,yc,rc):
 	elemType1 = mesh.ElemType(elemCode=R3D4, elemLibrary=STANDARD)
 	elemType2 = mesh.ElemType(elemCode=R3D3, elemLibrary=STANDARD)
 	p1.setElementType(regions=(p1.surfaces[namec].faces,), elemTypes=(elemType1, elemType2 ))
-	p1.seedPart(size=param['selt'], deviationFactor=0.01, minSizeFactor=0.01)
+	p1.seedPart(size=param['rad']/5., deviationFactor=0.01, minSizeFactor=0.01)
 	p1.generateMesh()
 	
 	return p1
@@ -297,12 +297,12 @@ def create_contact(idim, param):
  #TRAV
  if idim==1:
   mdb.models['Model-1'].SurfaceToSurfaceContactStd(name='cont_trav', 
-    createStepName='Initial', master=region1, slave=region2, sliding=SMALL, 
+    createStepName='Initial', main=region1, secondary=region2, sliding=SMALL, 
     enforcement=NODE_TO_SURFACE, thickness=OFF, interactionProperty='prop_cont_trav', surfaceSmoothing=NONE, 
     adjustMethod=NONE, smooth=0.2, initialClearance=OMIT, datumAxis=None, clearanceRegion=None)
  else:
   mdb.models['Model-1'].SurfaceToSurfaceContactStd(name='cont_trav', createStepName='Initial', 
-    master=region1, slave=region2, sliding=SMALL, thickness=ON, interactionProperty='prop_cont_trav',
+    main=region1, secondary=region2, sliding=SMALL, thickness=ON, interactionProperty='prop_cont_trav',
     adjustMethod=NONE, initialClearance=OMIT, datumAxis=None, clearanceRegion=None)
  #BASE
  mdb.models['Model-1'].ContactProperty('prop_cont_base')
@@ -313,23 +313,23 @@ def create_contact(idim, param):
  region1=a.instances['base'].surfaces['base'];region2=a.instances[param['name']].surfaces['bot']
  if idim==1:
   mdb.models['Model-1'].SurfaceToSurfaceContactStd(name='cont_base', 
-    createStepName='Initial', master=region1, slave=region2, sliding=SMALL, 
+    createStepName='Initial', main=region1, secondary=region2, sliding=SMALL, 
     enforcement=NODE_TO_SURFACE, thickness=OFF, interactionProperty='prop_cont_base', surfaceSmoothing=NONE, 
     adjustMethod=NONE, smooth=0.2, initialClearance=OMIT, datumAxis=None, clearanceRegion=None)
  else:
   mdb.models['Model-1'].SurfaceToSurfaceContactStd(name='cont_base', createStepName='Initial', 
-    master=region1, slave=region2, sliding=SMALL, thickness=ON, interactionProperty='prop_cont_base',
+    main=region1, secondary=region2, sliding=SMALL, thickness=ON, interactionProperty='prop_cont_base',
     adjustMethod=NONE, initialClearance=OMIT, datumAxis=None, clearanceRegion=None)
 
 def create_steps(idim, param, simu):
  ''' create steps '''
  #step: load
  mdb.models['Model-1'].ImplicitDynamicsStep(name='loading', previous='Initial', nlgeom=ON,
-    timePeriod=int(ceil(abs(simu['dmax']))*2.), initialInc=0.05, minInc=1e-5, maxInc=0.5, maxNumInc=10000, 
+    timePeriod=int(ceil(abs(simu['dmax']))*2.), initialInc=1e-3, minInc=1e-5, maxInc=0.5, maxNumInc=10000, 
     application=QUASI_STATIC, nohaf=OFF, amplitude=RAMP, alpha=DEFAULT, initialConditions=OFF)
  #step: unload		
  mdb.models['Model-1'].ImplicitDynamicsStep(name='unloading', previous='loading', nlgeom=ON, 
-    timePeriod=ceil(abs(simu['dmax'])/2.), initialInc=0.05, minInc=1e-5, maxInc=1.0, maxNumInc=10000,  
+    timePeriod=ceil(abs(simu['dmax'])/2.), initialInc=1e-2, minInc=1e-5, maxInc=1.0, maxNumInc=10000,  
     application=QUASI_STATIC, nohaf=OFF, amplitude=RAMP, alpha=DEFAULT, initialConditions=OFF)
  #outputs
  a=mdb.models['Model-1'].rootAssembly; 
@@ -369,8 +369,8 @@ def create_loads(idim, param, simu):
  #UNLOADING	
  mdb.models['Model-1'].boundaryConditions['movY'].setValuesInStep(stepName='unloading', u2=0.0)
  
-def run_simu(idim):
- ''' run simu '''
+def create_job(idim,irun=1):
+ ''' create job '''
  jobname='flex3pts_cont_'+str(idim)
  mdb.Job(name=jobname, model='Model-1', description='', type=ANALYSIS, 
     atTime=None, waitMinutes=0, waitHours=0, queue=None, memory=90, 
@@ -378,11 +378,12 @@ def run_simu(idim):
     explicitPrecision=SINGLE, nodalOutputPrecision=FULL, echoPrint=OFF, 
     modelPrint=OFF, contactPrint=OFF, historyPrint=OFF, userSubroutine='', 
     scratch='', resultsFormat=ODB, multiprocessingMode=DEFAULT, numCpus=1, numGPUs=0)
- 
- mdb.jobs[jobname].submit(consistencyChecking=OFF)	
- mdb.jobs[jobname].waitForCompletion()
- 
- return jobname
+    
+ if irun==1:
+	  mdb.jobs[jobname].submit(consistencyChecking=OFF)	
+	  mdb.jobs[jobname].waitForCompletion()
+	  return jobname	  
+ return []
  
 def post_treat(jobname, idim, param):
  ''' post treatment '''
@@ -472,21 +473,8 @@ def make_model(idim, param, mat, simu):
 #%% MAIN
 #---------------------------------------------------------------------------
 idim, param = make_model(idim, param, mat, simu)	
-jobname = run_simu(idim)
-post_treat(jobname, idim, param)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+jobname = create_job(idim,irun=1)
+if type(jobname)==str: 
+ post_treat(jobname, idim, param)
 
 

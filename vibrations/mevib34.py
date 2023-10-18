@@ -139,7 +139,7 @@ def q3():
          ('k1',1000.0),('k2',10000.),('k3',1.),  #spring stiffness
          ('Tend',10.), ('dt',0.1)               #plot limit and time discretisation
          ])
- #%% compute modes
+ #% compute modes
  res = q2(pa, pflag=False);phi=res['phi'];om=res['w'];
 
  

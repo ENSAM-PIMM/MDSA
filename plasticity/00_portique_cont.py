@@ -17,19 +17,19 @@ from caeModules import *
 Mdb()
 
 #---------------------------------------------------------------------------
-#%% PARAMETERS (unit: MM)
+#%% PARAMETERS (unit: MM-MPa)
 #---------------------------------------------------------------------------
 #choice of the model (1-beam; 2-solid2D; 3-solid3D)
 idim=1
-#name, dimensions of the sample [X,Y,Z], radius of cylinder, thickness, 
+#name, dimensions of the sample [X,Y,Z], thickness, radius of cylinder,  
 #size of elements, linear/quadratic interpolation (False/True), plane strain/stress in 2D ('strain'/'stress'), radius of fillet
-param=dict([('name','sample'),('dim',[300.,200.,11.]), ('rad',2.), ('thickness',3.),
+param=dict([('name','sample'),('dim',[300.,200.,11.]), ('thickness',3.), ('rad',2.), 
   ('selt',2.),('quad',True), ('type2d','stress'), ('radF',5.) ])
 #name, density, Young modulus, Poisson ratio, initial yield stress, linear hardening coefficient 
 mat=dict([('name','steel'),('dens',7850.e-12),('E',2.1e5),('nu',0.3),('Re',400.),('E1',1.0e3)])
 #load direction ('vertical'/'horizontal'), imposed displacement, 
 #specific case (0-None; 1-BC; 2-distance; 3-angle), value for specific case (1-stiffness; 2-distance; 3-angle)
-simu=dict([('load','vertical'),('dmax',20.), ('case',3), ('val',25)])
+simu=dict([('load','vertical'),('dmax',30.), ('case',0), ('val',25)])
 
 
 
@@ -39,14 +39,14 @@ simu=dict([('load','vertical'),('dmax',20.), ('case',3), ('val',25)])
 #---------------------------------------------------------------------------
 def check_input(param,simu):
     ''' check input data '''
-    if simu['case']==1:
+    if simu['case']==1: #stiffness
       simu['val']=abs(simu['val'])
-    elif simu['case']==2:
+    elif simu['case']==2: #distance
       max1 = param['dim'][1]*0.75 if simu['load']=='horizontal' else 0.75*param['dim'][0]/2.0
       if simu['val']<0.: simu['val']=0.
       if simu['val']>max1: simu['val']=max1
       if simu['val']<1.e-8: simu['case']=0
-    elif simu['case']==3:
+    elif simu['case']==3: #angle
       if simu['val']<0.: simu['val']=0.
       if simu['val']>45.: simu['val']=45.
       simu['val']=deg2rad(simu['val']) 
@@ -102,9 +102,11 @@ def sketch2D_cyl(xc,yc,tc,rc):
 	s1 = mdb.models['Model-1'].ConstrainedSketch(name='__profile__', sheetSize=2.*abs(rc))
 	g, v, d, c = s1.geometry, s1.vertices, s1.dimensions, s1.constraints; s1.setPrimaryObject(option=STANDALONE)
 	if tc<>0:
-	 s1.ArcByCenterEnds(center=(xc-rc, yc), point1=(xc-rc, yc-rc), point2=(xc-rc, yc+rc), direction=COUNTERCLOCKWISE)
+	 s1.ArcByCenterEnds(center=(xc-rc, yc), point1=(xc-rc, yc-rc), point2=(xc, yc), direction=COUNTERCLOCKWISE)
+	 s1.ArcByCenterEnds(center=(xc-rc, yc), point1=(xc, yc), point2=(xc-rc, yc+rc), direction=COUNTERCLOCKWISE)
 	else:
-	 s1.ArcByCenterEnds(center=(xc, yc+rc), point1=(xc-rc, yc+rc), point2=(xc+rc, yc+rc), direction=COUNTERCLOCKWISE)
+	 s1.ArcByCenterEnds(center=(xc, yc+rc), point1=(xc-rc, yc+rc), point2=(xc, yc), direction=COUNTERCLOCKWISE)
+	 s1.ArcByCenterEnds(center=(xc, yc+rc), point1=(xc, yc), point2=(xc+rc, yc+rc), direction=COUNTERCLOCKWISE)
 	return s1
 
 def cylinder2D(xc,yc,tc,rc):
@@ -125,7 +127,7 @@ def cylinder2D(xc,yc,tc,rc):
 	#mesh 
 	elemType1 = mesh.ElemType(elemCode=R2D2, elemLibrary=STANDARD)
 	p1.setElementType(regions=(p1.surfaces['cylinder'].edges,), elemTypes=(elemType1, ))
-	p1.seedPart(size=param['selt'], deviationFactor=0.01, minSizeFactor=0.1)
+	p1.seedPart(size=param['rad']/5., deviationFactor=0.01, minSizeFactor=0.1)
 	p1.generateMesh()
 	
 	return p1
@@ -150,7 +152,7 @@ def cylinder3D(xc,yc,tc,rc):
 	elemType1 = mesh.ElemType(elemCode=R3D4, elemLibrary=STANDARD)
 	elemType2 = mesh.ElemType(elemCode=R3D3, elemLibrary=STANDARD)
 	p1.setElementType(regions=(p1.surfaces['cylinder'].faces,), elemTypes=(elemType1, elemType2 ))
-	p1.seedPart(size=param['selt'], deviationFactor=0.01, minSizeFactor=0.1)
+	p1.seedPart(size=param['rad']/5., deviationFactor=0.01, minSizeFactor=0.1)
 	p1.generateMesh()
 	
 	return p1
@@ -169,12 +171,12 @@ def beam_geo(param,mat,simu):
 	#partition
 	if simu['case']==2:
 	 if simu['load']=='horizontal':
-	   e1=p.edges.getByBoundingBox(xMin=param['dim'][0]*0.45)	 
-	   p.PartitionEdgeByParam(edges=e1, parameter=simu['val']/param['dim'][1])
+	   e1=p.edges.getByBoundingBox(xMin=param['dim'][0]*0.499)	 
+ 	   p.PartitionEdgeByPoint(edge=e1[0], point=(param['dim'][0]/2.,param['dim'][1]-simu['val'],0.))
 	   p1=cylinder2D(param['dim'][0]/2.,param['dim'][1]-simu['val'],45,param['rad'])
 	 else:
 	   e1=p.edges.getByBoundingBox(yMin=param['dim'][1]*0.9, xMin=0.0)	 
-	   p.PartitionEdgeByParam(edges=e1, parameter=2.*simu['val']/param['dim'][0])
+ 	   p.PartitionEdgeByPoint(edge=e1[0], point=(simu['val'],param['dim'][1],0.))
 	   p1=cylinder2D(simu['val'],param['dim'][1],0,param['rad'])
 	else:
 	 if simu['load']=='horizontal':
@@ -225,8 +227,8 @@ def geo2D(param,mat,simu):
 	p.PartitionFaceByShortestPath(faces=p.faces.getByBoundingBox(), point1=(0.,0.,0.), point2=(0.,param['dim'][1],0.))
 	if simu['case']==2:
 	 if simu['load']=='horizontal':
-	   p1=(0.,param['dim'][1]-simu['val'],0.);p2=(param['dim'][0],param['dim'][1]-simu['val'],0.);	 
-	   cylinder2D(param['dim'][0]/2.-param['thickness']*1.005,param['dim'][1]-param['thickness']-param['radF']-simu['val'],45,param['rad'])	   
+	   yc=param['dim'][1]-param['thickness']-param['radF']-simu['val'];p1=(0.,yc,0.);p2=(param['dim'][0],yc,0.);	 
+	   cylinder2D(param['dim'][0]/2.-param['thickness']*1.002,yc,45,param['rad'])	   
 	 else:
 	   p1=(simu['val'],0.,0.);p2=(simu['val'],param['dim'][1],0.);
 	   cylinder2D(simu['val'],param['dim'][1],0,param['rad'])
@@ -295,8 +297,8 @@ def geo3D(param,mat,simu):
 	p.PartitionCellByPlaneThreePoints(point1=(0.,0.,0.), point2=(0.,1.,0.), point3=(0.,0.,1.),cells=p.cells.getByBoundingBox())
 	if simu['case']==2:
 	 if simu['load']=='horizontal':
-	   p1=(0.,simu['val'],0.);p2=(0.,simu['val'],1.);p3=(1.,simu['val'],0.)	
-	   cylinder3D(param['dim'][0]/2.-param['thickness'],param['dim'][1]-param['thickness']-param['radF']-simu['val'],45,param['rad'])		   
+	   yc=param['dim'][1]-param['thickness']-param['radF']-simu['val'];p1=(0.,yc,0.);p2=(0.,yc,1.);p3=(1.,yc,0.)	
+	   cylinder3D(param['dim'][0]/2.-param['thickness'],yc,45,param['rad'])		   
 	 else:
 	   p1=(simu['val'],0.,0.);p2=(simu['val'],1.,0.);p3=(simu['val'],0.,1.)	
 	   cylinder3D(simu['val'],param['dim'][1],0,param['rad'])
@@ -353,7 +355,7 @@ def create_assembly(param):
 	session.viewports['Viewport: 1'].setValues(displayedObject=a)
 	return a
 	
-def create_interaction(param):
+def create_interaction(idim,param):
 	''' create interaction '''
 	mdb.models['Model-1'].ContactProperty('prop_cont_cyl')
 	mdb.models['Model-1'].interactionProperties['prop_cont_cyl'].NormalBehavior(
@@ -362,29 +364,30 @@ def create_interaction(param):
 	region1=a.instances['cylinder'].surfaces['cylinder'];region2=a.instances[param['name']].surfaces['top']
 	if idim==1:
 	  mdb.models['Model-1'].SurfaceToSurfaceContactStd(name='cont_cylinder', 
-	   createStepName='Initial', master=region1, slave=region2, sliding=SMALL, 
+	   createStepName='Initial', main=region1, secondary=region2, sliding=SMALL, 
 	   enforcement=NODE_TO_SURFACE, thickness=OFF, interactionProperty='prop_cont_cyl', surfaceSmoothing=NONE, 
 	   adjustMethod=NONE, smooth=0.2, initialClearance=OMIT, datumAxis=None, clearanceRegion=None)
 	else:
 	  mdb.models['Model-1'].SurfaceToSurfaceContactStd(name='cont_cylinder', createStepName='Initial', 
-	   master=region1, slave=region2, sliding=SMALL, thickness=ON, interactionProperty='prop_cont_cyl',
+	   main=region1, secondary=region2, sliding=SMALL, thickness=ON, interactionProperty='prop_cont_cyl',
 	   adjustMethod=NONE, initialClearance=OMIT, datumAxis=None, clearanceRegion=None)
 
-def create_steps(param, simu):
+def create_steps(idim,param, simu):
 	''' create steps '''
 	#loading
 	mdb.models['Model-1'].ImplicitDynamicsStep(name='loading', previous='Initial', nlgeom=ON,
-	  timePeriod=int(ceil(abs(simu['dmax']))*2.), initialInc=0.05, minInc=1e-5, maxInc=0.5, maxNumInc=10000, 
+	  timePeriod=int(ceil(abs(simu['dmax']))*2.), initialInc=1e-3, minInc=1e-5, maxInc=0.5, maxNumInc=10000, 
 	  application=QUASI_STATIC, nohaf=OFF, amplitude=RAMP, alpha=DEFAULT, initialConditions=OFF)
 	#unloading	
 	mdb.models['Model-1'].ImplicitDynamicsStep(name='unloading', previous='loading', nlgeom=ON, 
-	  timePeriod=ceil(abs(simu['dmax'])/2.), initialInc=0.05, minInc=1e-5, maxInc=1.0, maxNumInc=10000,    
+	  timePeriod=ceil(abs(simu['dmax'])/2.), initialInc=1e-2, minInc=1e-5, maxInc=1.0, maxNumInc=10000,    
 	  application=QUASI_STATIC, nohaf=OFF, amplitude=RAMP, alpha=DEFAULT, initialConditions=OFF)
 	#ouput
 	a=mdb.models['Model-1'].rootAssembly; 
 	#sample
 	mdb.models['Model-1'].fieldOutputRequests['F-Output-1'].setValues(timeInterval=1.0, region=MODEL,
 	 variables=('S', 'E', 'PE', 'EE', 'U', 'SF', 'CSTRESS', 'CSTATUS'))
+	if idim==1: mdb.models['Model-1'].fieldOutputRequests['F-Output-1'].setValues(sectionPoints=(1, 2, 3, 4, 5))
 	#load
 	region1=a.instances['cylinder'].sets['ref_load']
 	out1=('U1','RF1') if simu['load']=='horizontal' else ('U2','RF2')
@@ -394,7 +397,7 @@ def create_steps(param, simu):
 	mdb.models['Model-1'].historyOutputRequests['H-Output-1'].setValues(variables=out1,
 	 timeInterval=1.0, region=region1, sectionPoints=DEFAULT, rebar=EXCLUDE)
 	 
-def create_loads(param,simu):
+def create_loads(idim,param,simu):
 	''' create loads '''
 	a = mdb.models['Model-1'].rootAssembly
 	#fix
@@ -406,8 +409,8 @@ def create_loads(param,simu):
 	if idim==3:
 	  mdb.models['Model-1'].ZsymmBC(name='zsym', createStepName='Initial', 
 	    region=a.instances[param['name']].sets['z0'], localCsys=None)
-	  mdb.models['Model-1'].boundaryConditions['fixY'].setValues(u3=SET, ur1=SET, ur2=SET)
-	#spring
+	  mdb.models['Model-1'].boundaryConditions['fixY'].setValues(u3=SET)
+	#spring only for 1D
 	if simu['case']==1:  
 	  mdb.models['Model-1'].rootAssembly.engineeringFeatures.SpringDashpotToGround(
 	    dashpotBehavior=OFF, dashpotCoefficient=0.0, dof=6, name='spring', 
@@ -424,9 +427,10 @@ def create_loads(param,simu):
 	    distributionType=UNIFORM, fieldName='', localCsys=None)     
 	 else:
 	  mdb.models['Model-1'].DisplacementBC(name='movX', createStepName='loading', 
-	    region=region1, u1=abs(simu['dmax']), u2=UNSET, ur3=UNSET, amplitude=UNSET, fixed=OFF, 
+	    region=region1, u1=abs(simu['dmax']), u2=0., ur3=0., amplitude=UNSET, fixed=OFF, 
 	    distributionType=UNIFORM, fieldName='', localCsys=None)
-	 #
+	 #       
+	 if idim==3: mdb.models['Model-1'].boundaryConditions['movX'].setValues(u3=0., ur1=0., ur2=0.) 
 	 mdb.models['Model-1'].boundaryConditions['movX'].setValuesInStep(stepName='unloading', u1=0.0, u2=0.0)
 	else:
 	 if simu['case']==3:
@@ -436,9 +440,10 @@ def create_loads(param,simu):
 	    distributionType=UNIFORM, fieldName='', localCsys=None)
 	 else:        
 	  mdb.models['Model-1'].DisplacementBC(name='movY', createStepName='loading', 
-	    region=region1, u1=UNSET, u2=-abs(simu['dmax']), ur3=UNSET, amplitude=UNSET, fixed=OFF, 
+	    region=region1, u1=0., u2=-abs(simu['dmax']), ur3=0., amplitude=UNSET, fixed=OFF, 
 	    distributionType=UNIFORM, fieldName='', localCsys=None)
-	 #        
+	 #       
+	 if idim==3: mdb.models['Model-1'].boundaryConditions['movY'].setValues(u3=0., ur1=0., ur2=0.) 
 	 mdb.models['Model-1'].boundaryConditions['movY'].setValuesInStep(stepName='unloading', u1=0.0, u2=0.0)
 	  
 def create_job(idim,irun=1):
@@ -458,7 +463,7 @@ def create_job(idim,irun=1):
 	  return jobname	  
 	return []
 	
-def post(jobname,param,simu):
+def post(idim,jobname,param,simu):
 	''' generate output '''
 	o3 = session.openOdb(name=os.getcwd()+'/'+jobname+'.odb')
 	#view
@@ -496,25 +501,33 @@ def post(jobname,param,simu):
  	#
 	fid1.close()
 
+def make_model(idim, param, mat, simu):	
+ ''' make model '''
+ simu = check_input(param,simu); 
+ #Domain 
+ create_material(mat);
+ if idim==2:
+  geo2D(param,mat,simu)  	
+ elif idim==3:
+  geo3D(param,mat,simu)	
+ else:
+  beam_geo(param,mat,simu);idim=1	
+ #
+ create_assembly(param)
+ create_interaction(idim,param)
+ create_steps(idim,param, simu)
+ create_loads(idim,param,simu)
+ #
+ return idim, simu
+ 
+ 
 #-----------------------------------------------------------------------------	
 #%%  MAIN
 #-----------------------------------------------------------------------------
-simu = check_input(param,simu); 
-create_material(mat);
-if idim==2:
- geo2D(param,mat,simu)  	
-elif idim==3:
- geo3D(param,mat,simu)	
-else:
- beam_geo(param,mat,simu);idim=1	
-create_assembly(param)
-create_interaction(param)
-create_steps(param, simu)
-create_loads(param,simu)
-jobname=create_job(idim,irun=0)
-
+idim, simu = make_model(idim, param, mat, simu)
+jobname=create_job(idim,irun=1)
 if type(jobname)==str: 
-  post(jobname,param,simu)
+  post(idim,jobname,param,simu)
 
 
 

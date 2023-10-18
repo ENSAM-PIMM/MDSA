@@ -2,8 +2,7 @@
 ''' 
  FITE 2A - ARTS ET METIERS 
  Utilities for MEVIB Course
- Start with runfile('mevib12.py') 
- 
+  
 Contributed by E. Monteiro and E. Balmes
 Copyright (c) 2018-2021 by ENSAM, All Rights Reserved.
 '''
