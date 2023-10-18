@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 ''' 
- FITE 2A - ARTS ET METIERS 
+ARTS ET METIERS - PGE2A - VIBRATIONS 
  Utilities for MEVIB Course
  Start with runfile('mevib.py')
  
@@ -47,22 +47,24 @@ def anim1D_mode(mo1,vals,vecs,idmode=1, num=100, fact=[]):
     if ElemP[jGroup]=='beam3': npts=3
     Elt=np.array(mo1.Elt[eltind,0:npts]-1,dtype=int)  
     mybox=np.array([np.min(mo1.Node[:,4:7],axis=0),np.max(mo1.Node[:,4:7],axis=0)])
-    dim1=np.diff(mybox,axis=0);XY=mo1.Node[:,4:6];uv=np.zeros([XY.shape[0],2])
+    dim1=np.diff(mybox,axis=0); XY=mo1.Node[:,4:6];
+    #index
+    Ua,iUa,iUb=np.intersect1d(mo1.Node[:,0]+0.01,mo1.DOF,return_indices=True)
+    Va,iVa,iVb=np.intersect1d(mo1.Node[:,0]+0.02,mo1.DOF,return_indices=True)
     #parameters to animate modes
     wy=vals[idmode-1] if vals[idmode-1]>1e-8 else 1.
     freq1=wy/(2.0*np.pi);t1=np.linspace(0,1,num)/freq1;     
-    if type(fact) is list: fact=1.0/np.max(np.abs(vecs[0::2,idmode-1])); 
+    if type(fact) is list: fact=np.max(dim1)/50./np.max(np.abs(vecs[:,idmode-1])); 
     y=fact*(vecs[:,idmode-1].reshape((vecs.shape[0],1)))*np.sin(wy*t1);     
     #init figure
-    fig=plot.figure();line1=plot.plot(mo1.Node[Elt.T,4],mo1.Node[Elt.T,5],'b*-');plot.ylim([-1.,1.])        
+    fig=plot.figure();line1=plot.plot(mo1.Node[Elt.T,4],mo1.Node[Elt.T,5],'b*-')#;plot.ylim([-1.,1.])        
     def init_anim():      
         plot.plot(mo1.Node[Elt.T,4],mo1.Node[Elt.T,5],'r*-')
         plot.title('Animation du mode '+str(idmode)+' de frequence '+'%.2f'%freq1+' Hz') 
         return line1
     
-    def run_anim(i2):       
-        uv[:,1]=y[0::2,i2]
-        XY1=XY+uv
+    def run_anim(i2): 
+        XY1=XY.copy();XY1[iUa,0]+=y[iUb,i2];XY1[iVa,1]+=y[iVb,i2]
         for i3 in range(len(line1)):
          line1[i3].set_data(XY1[Elt[i3,:],0],XY1[Elt[i3,:],1])
         return line1

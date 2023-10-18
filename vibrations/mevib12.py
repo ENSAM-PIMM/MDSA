@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-ARTS ET METIERS - FITE 2A - VIBRATIONS - ED1/2
+ARTS ET METIERS - PGE2A - VIBRATIONS - ED1/2
     OSCILLATEUR LINEAIRE A 1 et 2 DDL 
     
 Start with 
@@ -9,7 +9,7 @@ Start with
   q2d()  # or another questions
 
 Contributed by E. Monteiro and E. Balmes
-Copyright (c) 2018-2021 by ENSAM, All Rights Reserved.
+Copyright (c) 2018-2024 by ENSAM, All Rights Reserved.
 """
 import numpy as np
 import scipy.integrate as integrate
@@ -75,11 +75,14 @@ def FR_ODE(pa):
     print('Time in figure 20, frequency in figure 2')
     
 #------------------------------------------------------------------------------
+#
 #   Part 1: system with 1 degree of freedom
+#
 #------------------------------------------------------------------------------
 
-    
-#%% State space ODE integration
+#------------------------------------------------------------------------------
+#%%  Q2 State space ODE integration
+#------------------------------------------------------------------------------    
 def q2d():
  pa=dict([('m',1.),('c',0.2),('k',100),  #1DOF 
          ('F0',200.0),('a',70.),        #sinusoidal excitation
@@ -89,8 +92,11 @@ def q2d():
  FR_ODE(pa)
  # What is the effect of playing with dt and Tend ? you can do it with
  # pa['dt']=.05;pa['Tend']=5;FR_ODE(pa)
-    
-#%% Modal coordinates transfer  
+   
+ 
+#------------------------------------------------------------------------------
+#%%  Q3 Modal coordinates transfer
+#------------------------------------------------------------------------------  
 def q3():
  #init plot data structure
  pa=dict([('m',1.),('c',.4),('k',400.),   #1DOF 
@@ -107,8 +113,10 @@ def q3():
  #plot Free Response in figure(1)  
  plotFreq(xy,gf=1)
 
- 
-#%% Effect of damping on time domain Free Response
+
+#------------------------------------------------------------------------------
+#%%  Q4 Effect of damping on time domain Free Response
+#------------------------------------------------------------------------------  
 def q4t():
     
  pa=dict([('m',1.),('c',0.5),('k',1.),   #1DOF 
@@ -130,7 +138,9 @@ def q4t():
  plot2D(xyplot,gf=20)
 
 
-#%% Effect of damping and frequency on Forced Response
+#------------------------------------------------------------------------------
+#%%  Q4 Effect of damping and frequency on Forced Response
+#------------------------------------------------------------------------------ 
 def q4(): 
  pa=dict([('m',1.),('c',0.5),('k',1.),   #1DOF 
          ('u0',1.), ('v0',1.),          #initial conditions
@@ -154,39 +164,40 @@ def q4():
 
 
 #------------------------------------------------------------------------------
+#
 #   Part 2: system with 2 degrees of freedom
+#
 #------------------------------------------------------------------------------
 
-
-def q7b(nout=0):
-    
- #%% parameters 2 DOF system
+#------------------------------------------------------------------------------
+#%%  Q7b Compute modes
+#------------------------------------------------------------------------------
+def q7b(nout=0):    
+ #parameters 2 DOF system
  pb=dict([('m',1500.),('a',1.2), ('b',1.4),     #2 DOF
          ('ka',[]), ('kb',[]), ('k0',40e3),   #stiffness  
          ('u0',[1., 0.]), ('v0',[1.,0.]),   #initial conditions
          ('balanced',1)])
- 
- #%% Compute matrices of 2 DOF system
+ #Compute matrices of 2 DOF system
  if pb['balanced']==1:
     pb['ka']=(pb['a']+pb['b'])/pb['a']*pb['k0'];
     pb['kb']=(pb['a']+pb['b'])/pb['b']*pb['k0'];
-    
+ #Build matrices   
  M=np.array([[pb['m'],0],[0.,pb['m']*(pb['a']+pb['b'])**2/2.]]);
  K=np.array([ [pb['ka']+pb['kb'], -pb['a']*pb['ka']+pb['b']*pb['kb']],
             [-pb['a']*pb['ka']+pb['b']*pb['kb'], pb['ka']*pb['a']**2+pb['kb']*pb['b']**2] ])
  if nout==0: print("M= ",M);print(' ');print("K= ",K)
-
-
- #%% determine modes  (are these mass normalized ? see code in mevib.py)
+ # determine modes  (are these mass normalized ? see code in mevib.py)
  vals, vecs = feeig(K,M)
  if nout==0: print("Eigenvalues (Hz): ",vals/2/np.pi)
  else:  return pb,vals,vecs,M,K
 
 
+#------------------------------------------------------------------------------
+#%%  Q7d Forced response
+#------------------------------------------------------------------------------
 def q7d(nout=0):
- # Forcced response
  # On paper : normalize modes, express transfer, add modal damping
- 
  [pb,vals,vecs,M,K]=q7b(nout=1);
  #%% add damping
  C=1e-3*K
@@ -204,10 +215,14 @@ def q7d(nout=0):
  else: 
    return pb,vals,vecs,M,K
 
+
+#------------------------------------------------------------------------------
+#%%  Q7e Modal amplitudes in time and frequency domain
+#------------------------------------------------------------------------------
 def q7e():
- # Modal amplitudes in time and frequency domain
- 
+ #build matrices and compute modes
  [pb,vals,vecs,M,K]=q7d(nout=1);
+ #
  un1=vecs[:,0].T@M@vecs[:,0]
  un2=vecs[:,1].T@M@vecs[:,1]
  un3=vecs[:,0].T@M@vecs[:,1]

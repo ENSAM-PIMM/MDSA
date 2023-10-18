@@ -1,8 +1,13 @@
 # -*- coding: utf-8 -*-
 """
-ED56 VIBRATIONS - FITE 2A - ARTS ET METIERS 
+ARTS ET METIERS - PGE2A - VIBRATIONS - ED5/6
+    Modes de flexion d'une poutre Euler-Bernoulli
+         analytique et numérique
+
  Start with runfile('mevib56.py')
-Copyright 2019-2021, Eric Monteiro, Etienne Balmes
+ 
+Contributed by E. Monteiro and E. Balmes
+Copyright (c) 2018-2024 by ENSAM, All Rights Reserved.
 """
 
 from mevib import compute_section,plot_bode,plot2D,quad_seg,feeig
@@ -24,7 +29,7 @@ def beam_geo(mout=0):
   #init model for visualization
   mo1=model(); typ1=[ord(s) for s in 'beam2'];typ1.insert(0,np.inf) 
   mo1.Node=np.array([[1,0.,0.,0.,0.,0.,0.],[2,0.,0.,0.,pa['L'],0.,0.]]) 
-  mo1.Elt=np.array([typ1,[1,2,0,0,0,0]])
+  mo1.Elt=np.array([typ1,[1,2,0,0,0,0]]); mo1.DOF=np.array([1.02,1.06,2.02,2.06])
   return pa,mo1
  else:
    #init model for visualization
@@ -32,6 +37,8 @@ def beam_geo(mout=0):
    mo1.Node[:,0]=range(1,pa['Ne']+2); mo1.Node[:,4]=np.linspace(0,1,pa['Ne']+1)*pa['L']
    typ1=[ord(s) for s in 'beam2'];typ1.insert(0,np.inf);mo1.Elt[0,:]=typ1
    mo1.Elt[1:,0]=range(1,pa['Ne']+1);mo1.Elt[1:,1]=range(2,pa['Ne']+2)
+   mo1.DOF=np.zeros((2*(pa['Ne']+1)));mo1.DOF[0::2]=np.arange(1,pa['Ne']+2)+.02
+   mo1.DOF[1::2]=np.arange(1,pa['Ne']+2)+.06
    return pa,mo1
 
 
@@ -214,9 +221,9 @@ def q6c(pa=[],idmode=1, ng=4):
   vals, vecs1 = feeig(K[2::,2::],M[2::,2::])
   vecs=np.zeros([M.shape[0],vecs1.shape[1]],order='F');vecs[2:,:]=vecs1
   #view modes 
-  fig1=anim1D_mode(mo1,omf2,phif2,idmode)
-  fig2=anim1D_mode(mo1,vals,vecs,idmode)
-  return fig1,fig2
+  #fig1=anim1D_mode(mo1,omf2,phif2,idmode)
+  fig1=anim1D_mode(mo1,vals,vecs,idmode)
+  return fig1
 
 
 

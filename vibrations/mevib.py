@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 ''' 
- FITE 2A - ARTS ET METIERS 
+ARTS ET METIERS - PGE2A - VIBRATIONS 
  Utilities for MEVIB Course
   
 Contributed by E. Monteiro and E. Balmes
