@@ -8,8 +8,6 @@ Copyright (c) 2018-2024 by ENSAM, All Rights Reserved.
 """
 
 import numpy as np
-import matplotlib.pyplot as plot
-import matplotlib.animation as animation
 import scipy.linalg as linalg
 import scipy.sparse as sparse
 from mevib import cosd,sind,feeig,plot2D,plotFourier,plotFreq 
@@ -68,7 +66,7 @@ def q2(pa=[], idmode=1, pflag=True):
          ])
  # compute modes
  M,K = q1(pa, pflag=False);
- om1, phi1 = feeig(K, M)  
+ om1, phi1 = feeig(K, M, norm='M')  
  # run anim
  if pflag:
   print("omega=", om1);print(' ');print("phi= ", phi1)
@@ -84,7 +82,7 @@ def q2(pa=[], idmode=1, pflag=True):
 def q3():
  # parameters 4 DOF system 
  pa=dict([('m',10.),('L',1.),('a',45.),           #mass, length, angle 
-         ('k1',1000.0),('k2',10000.),('k3',1.),  #spring stiffness
+         ('k1',1000.0),('k2',10000.),('k3',1000.),  #spring stiffness
          ('Tend',10.), ('dt',0.1)               #plot limit and time discretisation
          ])
  # compute modes
@@ -101,13 +99,16 @@ def q3():
  M,K = q1(pa, pflag=False)
 
  #q3c : write formula forced response
- s=2.j ;  Z=s**2*M+K
- y = C.dot ( linalg.solve(Z,B) )  # Ecrire la formule
+ y1 = lambda s : C @ ( linalg.solve(complex(0.,s)**2*M+K,B) )  # Ecrire la formule
  # Write formula spectral response
- y2=( C @ phi1) @ (np.diag(1/(s**2+om1**2))) @ ( phi1.T @ B )
- 
+ y2 = lambda s :( C @ phi1) @ (np.diag(1/(complex(0.,s)**2+om1**2))) @ ( phi1.T @ B )
  # 4 edit code to add Rayleigh damping in the code below
- 
+ xyplot=dict([('X',np.linspace(0,50,1000)), ('Xlabel','w'), ('Ylabel','F3') ])
+ xyplot['Y']=np.zeros((1000,2))
+ for j1 in range(1000):
+   xyplot['Y'][j1,:]=[y1(xyplot['X'][j1]).real, y2(xyplot['X'][j1]).real ]
+ plotFreq(xyplot,gf=5)  
+   
 #------------------------------------------------------------------------------
 #%%   Q4: damping
 #------------------------------------------------------------------------------
@@ -164,9 +165,9 @@ def q4():
 #------------------------------------------------------------------------------  
   
 #------------------------------------------------------------------------------
-#%%   Q6a: Modification de raideur
-#------------------------------------------------------------------------------
-def q6a(k4=1000.):
+#%%   Q6: Modification de raideur
+#------------------------------------------------------------------------------  
+def q6(cas=2, rate=0.05):
  # parameters 4 DOF system 
  pa=dict([('m',10.),('L',1.),('a',45.),           #mass, length, angle 
           ('k1',1000.0),('k2',10000.),('k3',1000.),  #spring stiffness
@@ -174,77 +175,24 @@ def q6a(k4=1000.):
           ])
  # compute modes for initial model
  om1, phi1 = q2(pa, pflag=False); M,K = q1(pa, pflag=False) 
+ # compute added stiffness
+ c=cosd(pa['a']);s=sind(pa['a']);z4=[0.,0.,0.,0.]
+ if cas==1:
+   idmode=1; dK = np.array([ [c**2,c*s,0.,0.],[c*s,s**2,0.,0.],z4,z4])
+ elif cas==2:
+   idmode=1; dK = np.array([ [s**2,-c*s,0.,0.],[-c*s,c**2,0.,0.],z4,z4])
+ elif cas==3:
+   idmode=3; dK = np.array([ z4,z4,[0.,0.,s**2,-c*s],[0.,0.,-c*s,c**2]])
+ elif cas==4:
+   idmode=4; dK = np.array([ z4,z4,[0.,0.,c**2,c*s],[0.,0.,c*s,s**2]])
  # compute modes for modified model
- c=cosd(pa['a']);s=sind(pa['a']);
- dK = k4*np.array([ [c**2,c*s,0.,0.],[c*s,s**2,0.,0.],[0.,0.,0.,0.],[0.,0.,0.,0.]])
- om2, phi2 = feeig(K+dK, M) 
+ ki=((1+rate)**2-1)*om1[idmode-1]**2/(phi1[:,idmode-1].T@dK@phi1[:,idmode-1])
+ om2, phi2 = feeig(K+ki*dK, M)
  # print
+ print(' ');print('k = ', ki)
  print("omega_new= ", om2);print("omega_ini=", om1);print("ratio = ", om2/om1)
  print(' ');print(' ')
  print('phi_ini =', phi1);print(' ');print('phi_new =', phi2)
-  
-
-#------------------------------------------------------------------------------
-#%%   Q6b: Modification de raideur
-#------------------------------------------------------------------------------  
-def q6b(k5=103.):
- # parameters 4 DOF system 
- pa=dict([('m',10.),('L',1.),('a',45.),           #mass, length, angle 
-          ('k1',1000.0),('k2',10000.),('k3',1000.),  #spring stiffness
-          ('Tend',10.), ('dt',0.1)               #plot limit and time discretisation
-          ])
- # compute modes for initial model
- om1, phi1 = q2(pa, pflag=False); M,K = q1(pa, pflag=False) 
- # compute modes for modified model
- c=cosd(pa['a']);s=sind(pa['a']);
- dK = k5*np.array([ [s**2,-c*s,0.,0.],[-c*s,c**2,0.,0.],[0.,0.,0.,0.],[0.,0.,0.,0.]])
- om2, phi2 = feeig(K+dK, M) 
- # print
- print("omega_new= ", om2);print("omega_ini=", om1);print("ratio = ", om2/om1)
- print(' ');print(' ')
- print('phi_ini =', phi1);print(' ');print('phi_new =', phi2)  
-  
-  
-#------------------------------------------------------------------------------
-#%%   Q6c: Modification de raideur
-#------------------------------------------------------------------------------
-def q6c(k6=1025.):
- # parameters 4 DOF system 
- pa=dict([('m',10.),('L',1.),('a',45.),           #mass, length, angle 
-           ('k1',1000.0),('k2',10000.),('k3',1000.),  #spring stiffness
-           ('Tend',10.), ('dt',0.1)               #plot limit and time discretisation
-           ])
- # compute modes for initial model
- om1, phi1 = q2(pa, pflag=False); M,K = q1(pa, pflag=False) 
- # compute modes for modified model
- c=cosd(pa['a']);s=sind(pa['a']);
- dK = k6*np.array([ [0.,0.,0.,0.],[0.,0.,0.,0.],[0.,0.,s**2,-c*s],[0.,0.,-c*s,c**2]])
- om2, phi2 = feeig(K+dK, M) 
- # print
- print("omega_new= ", om2);print("omega_ini=", om1);print("ratio = ", om2/om1)
- print(' ');print(' ')
- print('phi_ini =', phi1);print(' ');print('phi_new =', phi2) 
-  
-  
-#------------------------------------------------------------------------------
-#%%   Q6d: Modification de raideur
-#------------------------------------------------------------------------------
-def q6d(k7=1051.):
- # parameters 4 DOF system 
- pa=dict([('m',10.),('L',1.),('a',45.),           #mass, length, angle 
-           ('k1',1000.0),('k2',10000.),('k3',1000.),  #spring stiffness
-           ('Tend',10.), ('dt',0.1)               #plot limit and time discretisation
-           ])
- # compute modes for initial model
- om1, phi1 = q2(pa, pflag=False); M,K = q1(pa, pflag=False) 
- # compute modes for modified model
- c=cosd(pa['a']);s=sind(pa['a']);
- dK = k7*np.array([ [0.,0.,0.,0.],[0.,0.,0.,0.],[0.,0.,c**2,c*s],[0.,0.,c*s,s**2]])
- om2, phi2 = feeig(K+dK, M) 
- # print
- print("omega_new= ", om2);print("omega_ini=", om1);print("ratio = ", om2/om1)
- print(' ');print(' ')
- print('phi_ini =', phi1);print(' ');print('phi_new =', phi2)   
   
   
 #------------------------------------------------------------------------------
