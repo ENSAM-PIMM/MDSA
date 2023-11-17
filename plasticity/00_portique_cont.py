@@ -180,7 +180,9 @@ def beam_geo(param,mat,simu):
 	   p1=cylinder2D(simu['val'],param['dim'][1],0,param['rad'])
 	else:
 	 if simu['load']=='horizontal':
-	  p1=cylinder2D(param['dim'][0]/2.,param['dim'][1]-param['radF'],45,param['rad'])
+	  e1=p.edges.getByBoundingBox(xMin=param['dim'][0]*0.499)	 
+	  p.PartitionEdgeByPoint(edge=e1[0], point=(param['dim'][0]/2.,param['dim'][1]-2.*param['radF'],0.))
+	  p1=cylinder2D(param['dim'][0]/2.,param['dim'][1]-2.*param['radF'],45,param['rad'])
 	 else:
 	  p1=cylinder2D(0.,param['dim'][1],0,param['rad'])
 			
@@ -188,7 +190,7 @@ def beam_geo(param,mat,simu):
 	p = mdb.models['Model-1'].parts[param['name']];v=p.vertices
 	v1 = v.getByBoundingBox(yMax=1.e-5);p.Set(vertices=v1, name='base');
 	v2 = v.getByBoundingSphere(center=(0.0, param['dim'][1], 0.0),radius=1.e-4);p.Set(vertices=v2, name='middle');
-	if simu['load']=='horizontal':v2 = v.getByBoundingSphere(center=(param['dim'][0]/2., param['dim'][1]-param['radF'], 0.0),radius=1.e-4)
+	if simu['load']=='horizontal':v2 = v.getByBoundingSphere(center=(param['dim'][0]/2., param['dim'][1]-2.*param['radF'], 0.0),radius=1.e-4)
 	p.Set(vertices=v2, name='trav');p.Surface(name='top', side1Edges=(p.edges.getByBoundingBox(),))
 	
 	#beam section
@@ -235,7 +237,9 @@ def geo2D(param,mat,simu):
 	 p.PartitionFaceByShortestPath(faces=p.faces.getByBoundingBox(), point1=p1, point2=p2)
 	else:
 	 if simu['load']=='horizontal':
-	  cylinder2D(param['dim'][0]/2.-param['thickness']*1.005,param['dim'][1]-param['thickness']-param['radF'],45,param['rad'])
+	  yc=param['dim'][1]-param['thickness']-param['radF'];p1=(0.,yc,0.);p2=(param['dim'][0],yc,0.);	
+	  cylinder2D(param['dim'][0]/2.-param['thickness']*1.002,yc,45,param['rad'])
+	  p.PartitionFaceByShortestPath(faces=p.faces.getByBoundingBox(), point1=p1, point2=p2)
 	 else:
 	  cylinder2D(0.,param['dim'][1],0,param['rad'])
 	  
@@ -298,14 +302,16 @@ def geo3D(param,mat,simu):
 	if simu['case']==2:
 	 if simu['load']=='horizontal':
 	   yc=param['dim'][1]-param['thickness']-param['radF']-simu['val'];p1=(0.,yc,0.);p2=(0.,yc,1.);p3=(1.,yc,0.)	
-	   cylinder3D(param['dim'][0]/2.-param['thickness'],yc,45,param['rad'])		   
+	   cylinder3D(param['dim'][0]/2.-param['thickness']*1.002,yc,45,param['rad'])		   
 	 else:
 	   p1=(simu['val'],0.,0.);p2=(simu['val'],1.,0.);p3=(simu['val'],0.,1.)	
 	   cylinder3D(simu['val'],param['dim'][1],0,param['rad'])
 	 p.PartitionCellByPlaneThreePoints(cells=p.cells.getByBoundingBox(), point1=p1, point2=p2, point3=p3)
 	else:
 	 if simu['load']=='horizontal':
-	  cylinder3D(param['dim'][0]/2.-param['thickness'],param['dim'][1]-param['thickness']-param['radF'],45,param['rad'])
+	  yc=param['dim'][1]-param['thickness']-param['radF'];p1=(0.,yc,0.);p2=(0.,yc,1.);p3=(1.,yc,0.)	
+	  cylinder3D(param['dim'][0]/2.-param['thickness']*1.002,param['dim'][1]-param['thickness']-param['radF'],45,param['rad'])
+	  p.PartitionCellByPlaneThreePoints(cells=p.cells.getByBoundingBox(), point1=p1, point2=p2, point3=p3)
 	 else:
 	  cylinder3D(0.,param['dim'][1],0,param['rad'])
 
