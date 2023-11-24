@@ -382,7 +382,7 @@ def create_steps(idim,param, simu):
 	''' create steps '''
 	#loading
 	mdb.models['Model-1'].ImplicitDynamicsStep(name='loading', previous='Initial', nlgeom=ON,
-	  timePeriod=int(ceil(abs(simu['dmax']))*2.), initialInc=1e-3, minInc=1e-5, maxInc=0.5, maxNumInc=10000, 
+	  timePeriod=int(ceil(abs(simu['dmax']))*2.), initialInc=1e-6, minInc=1e-9, maxInc=0.5, maxNumInc=10000000, 
 	  application=QUASI_STATIC, nohaf=OFF, amplitude=RAMP, alpha=DEFAULT, initialConditions=OFF)
 	#unloading	
 	mdb.models['Model-1'].ImplicitDynamicsStep(name='unloading', previous='loading', nlgeom=ON, 
