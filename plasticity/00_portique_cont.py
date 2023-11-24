@@ -429,7 +429,7 @@ def create_loads(idim,param,simu):
 	 if simu['case']==3:
 	  u1in=abs(simu['dmax'])*cos(simu['val']); u2in=abs(simu['dmax'])*sin(simu['val']) 
 	  mdb.models['Model-1'].DisplacementBC(name='movX', createStepName='loading', 
-	    region=region1, u1=u1in, u2=u2in, ur3=UNSET, amplitude=UNSET, fixed=OFF, 
+	    region=region1, u1=u1in, u2=u2in, ur3=0., amplitude=UNSET, fixed=OFF, 
 	    distributionType=UNIFORM, fieldName='', localCsys=None)     
 	 else:
 	  mdb.models['Model-1'].DisplacementBC(name='movX', createStepName='loading', 
@@ -442,7 +442,7 @@ def create_loads(idim,param,simu):
 	 if simu['case']==3:
 	  u1in=abs(simu['dmax'])*sin(simu['val']); u2in=abs(simu['dmax'])*cos(simu['val']) 
 	  mdb.models['Model-1'].DisplacementBC(name='movY', createStepName='loading', 
-	    region=region1, u1=u1in, u2=-u2in, ur3=UNSET, amplitude=UNSET, fixed=OFF, 
+	    region=region1, u1=u1in, u2=-u2in, ur3=0., amplitude=UNSET, fixed=OFF, 
 	    distributionType=UNIFORM, fieldName='', localCsys=None)
 	 else:        
 	  mdb.models['Model-1'].DisplacementBC(name='movY', createStepName='loading', 
