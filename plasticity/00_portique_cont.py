@@ -7,7 +7,7 @@
   (with contact)
  
  Contributed by M. Guskov, N. Ranc and E. Monteiro 
- Copyright (c) 2018-2023 by ENSAM Paris, All Rights Reserved.		
+ Copyright (c) 2018-2024 by ENSAM Paris, All Rights Reserved.		
 '''
 
 from abaqus import *
@@ -23,13 +23,13 @@ Mdb()
 idim=1
 #name, dimensions of the sample [X,Y,Z], thickness, radius of cylinder,  
 #size of elements, linear/quadratic interpolation (False/True), plane strain/stress in 2D ('strain'/'stress'), radius of fillet
-param=dict([('name','sample'),('dim',[300.,200.,11.]), ('thickness',3.), ('rad',2.), 
+param=dict([('name','sample'),('dim',[300.,220.,11.]), ('thickness',4.), ('rad',2.), 
   ('selt',2.),('quad',True), ('type2d','stress'), ('radF',5.) ])
 #name, density, Young modulus, Poisson ratio, initial yield stress, linear hardening coefficient 
 mat=dict([('name','steel'),('dens',7850.e-12),('E',2.1e5),('nu',0.3),('Re',400.),('E1',1.0e3)])
 #load direction ('vertical'/'horizontal'), imposed displacement, 
 #specific case (0-None; 1-BC; 2-distance; 3-angle), value for specific case (1-stiffness; 2-distance; 3-angle)
-simu=dict([('load','vertical'),('dmax',30.), ('case',0), ('val',25)])
+simu=dict([('load','horizontal'),('dmax',30.), ('case',0), ('val',25)])
 
 
 

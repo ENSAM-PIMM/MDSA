@@ -7,7 +7,7 @@
       (with contact)
  
  Contributed by M. Guskov, N. Ranc and E. Monteiro 
- Copyright (c) 2018-2023 by ENSAM Paris, All Rights Reserved.	
+ Copyright (c) 2018-2024 by ENSAM Paris, All Rights Reserved.	
 '''
 
 from abaqus import *
@@ -24,10 +24,10 @@ Mdb()
 idim=1
 #name, dimensions of the sample [X,Y,Z], radius of cylinder, space between fix points, 
 #size of elements, linear/quadratic interpolation (False/True), plane strain/stress in 2D ('strain'/'stress')
-param=dict([('name','sample'),('dim',[400., 12., 12.]), ('rad',5.), ('base',290.),
+param=dict([('name','sample'),('dim',[300., 14., 14.]), ('rad',5.), ('base',250.),
   ('selt',2.),('quad',True), ('type2d','stress') ])
 #name, Density, Young modulus, Poisson ratio, initial yield stress, linear isotropic hardening coefficient 
-mat=dict([('name','steel'),('dens',7850.e-12),('E',2.1e5),('nu',0.3),('Re',200.),('E1',1.0e3)])
+mat=dict([('name','steel'),('dens',7850.e-12),('E',2.1e5),('nu',0.3),('Re',300.),('E1',1.0e3)])
 #imposed displacement
 simu=dict([('dmax',30.)])
 
@@ -68,7 +68,8 @@ def sketch2D_cyl(xc,yc,rc):
 	s1 = mdb.models['Model-1'].ConstrainedSketch(name='__profile__', sheetSize=2.*abs(rc))
 	g, v, d, c = s1.geometry, s1.vertices, s1.dimensions, s1.constraints; s1.setPrimaryObject(option=STANDALONE)
 	#s1.ArcByCenterEnds(center=(xc, yc+rc), point1=(xc-rc, yc+rc), point2=(xc+rc, yc+rc), direction=COUNTERCLOCKWISE)
-	s1.ArcByCenterEnds(center=(xc, yc+rc), point1=(xc-rc*cos(pi/3.), yc+rc*(1.-sin(pi/3.))), point2=(xc+rc, yc+rc), direction=COUNTERCLOCKWISE)
+	s1.ArcByCenterEnds(center=(xc, yc+rc), point1=(xc-rc*cos(pi/3.), yc+rc*(1.-sin(pi/3.))), point2=(xc, yc), direction=COUNTERCLOCKWISE)
+	s1.ArcByCenterEnds(center=(xc, yc+rc), point1=(xc, yc), point2=(xc+rc*cos(pi/3.), yc+rc*(1.-sin(pi/3.))), direction=COUNTERCLOCKWISE)
 	return s1
 
 def cylinder2D(namec,xc,yc,rc):
@@ -90,7 +91,7 @@ def cylinder2D(namec,xc,yc,rc):
 	#mesh 
 	elemType1 = mesh.ElemType(elemCode=R2D2, elemLibrary=STANDARD)
 	p1.setElementType(regions=(p1.surfaces[namec].edges,), elemTypes=(elemType1, ))
-	p1.seedPart(size=param['rad']/5., deviationFactor=0.01, minSizeFactor=0.01)
+	p1.seedPart(size=param['rad']/10., deviationFactor=0.01, minSizeFactor=0.01)
 	p1.generateMesh()
 	
 	return p1
@@ -115,7 +116,7 @@ def cylinder3D(namec,xc,yc,rc):
 	elemType1 = mesh.ElemType(elemCode=R3D4, elemLibrary=STANDARD)
 	elemType2 = mesh.ElemType(elemCode=R3D3, elemLibrary=STANDARD)
 	p1.setElementType(regions=(p1.surfaces[namec].faces,), elemTypes=(elemType1, elemType2 ))
-	p1.seedPart(size=param['rad']/5., deviationFactor=0.01, minSizeFactor=0.01)
+	p1.seedPart(size=param['rad']/10., deviationFactor=0.01, minSizeFactor=0.01)
 	p1.generateMesh()
 	
 	return p1
@@ -329,21 +330,21 @@ def create_steps(idim, param, simu):
     application=QUASI_STATIC, nohaf=OFF, amplitude=RAMP, alpha=DEFAULT, initialConditions=OFF)
  #step: unload		
  mdb.models['Model-1'].ImplicitDynamicsStep(name='unloading', previous='loading', nlgeom=ON, 
-    timePeriod=ceil(abs(simu['dmax'])/2.), initialInc=1e-2, minInc=1e-5, maxInc=1.0, maxNumInc=10000,  
+    timePeriod=ceil(abs(simu['dmax'])*2.), initialInc=1e-2, minInc=1e-5, maxInc=0.5, maxNumInc=10000,  
     application=QUASI_STATIC, nohaf=OFF, amplitude=RAMP, alpha=DEFAULT, initialConditions=OFF)
  #outputs
  a=mdb.models['Model-1'].rootAssembly; 
  #sample
- mdb.models['Model-1'].fieldOutputRequests['F-Output-1'].setValues(timeInterval=1.0, region=MODEL,
+ mdb.models['Model-1'].fieldOutputRequests['F-Output-1'].setValues(timeInterval=0.5, region=MODEL,
     variables=('S', 'E', 'PE', 'EE', 'U', 'SF', 'CSTRESS', 'CSTATUS'))
  if idim==1: mdb.models['Model-1'].fieldOutputRequests['F-Output-1'].setValues(sectionPoints=(1, 2, 3, 4, 5))
  #load
  region1=a.instances['trav'].sets['ref_trav']
  mdb.models['Model-1'].FieldOutputRequest(name='F-Output-2', 
-    createStepName='loading', variables=('U', 'RF', ), timeInterval=1.0, 
+    createStepName='loading', variables=('U', 'RF', ), timeInterval=0.5, 
     region=region1, sectionPoints=DEFAULT, rebar=EXCLUDE)
  mdb.models['Model-1'].historyOutputRequests['H-Output-1'].setValues(variables=('U2', 'RF2', ),
-     timeInterval=1.0, region=region1, sectionPoints=DEFAULT, rebar=EXCLUDE)
+     timeInterval=0.5, region=region1, sectionPoints=DEFAULT, rebar=EXCLUDE)
 	 
 def create_loads(idim, param, simu):
  ''' create loads '''
@@ -364,7 +365,7 @@ def create_loads(idim, param, simu):
  #LOADING
  region1 = a.instances['trav'].sets['ref_trav']
  mdb.models['Model-1'].DisplacementBC(name='movY', createStepName='loading', 
-    region=region1, u1=UNSET, u2=-abs(simu['dmax']), ur3=UNSET, amplitude=UNSET, fixed=OFF, 
+    region=region1, u1=0.0, u2=-abs(simu['dmax']), ur3=0.0, amplitude=UNSET, fixed=OFF, 
     distributionType=UNIFORM, fieldName='', localCsys=None)
  #UNLOADING	
  mdb.models['Model-1'].boundaryConditions['movY'].setValuesInStep(stepName='unloading', u2=0.0)
