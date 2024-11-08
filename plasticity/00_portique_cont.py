@@ -101,7 +101,7 @@ def sketch2D_cyl(xc,yc,tc,rc):
 	''' draw cylinder '''
 	s1 = mdb.models['Model-1'].ConstrainedSketch(name='__profile__', sheetSize=2.*abs(rc))
 	g, v, d, c = s1.geometry, s1.vertices, s1.dimensions, s1.constraints; s1.setPrimaryObject(option=STANDALONE)
-	if tc<>0:
+	if tc!=0:
 	 s1.ArcByCenterEnds(center=(xc-rc, yc), point1=(xc-rc, yc-rc), point2=(xc, yc), direction=COUNTERCLOCKWISE)
 	 s1.ArcByCenterEnds(center=(xc-rc, yc), point1=(xc, yc), point2=(xc-rc, yc+rc), direction=COUNTERCLOCKWISE)
 	else:
@@ -172,11 +172,11 @@ def beam_geo(param,mat,simu):
 	if simu['case']==2:
 	 if simu['load']=='horizontal':
 	   e1=p.edges.getByBoundingBox(xMin=param['dim'][0]*0.499)	 
- 	   p.PartitionEdgeByPoint(edge=e1[0], point=(param['dim'][0]/2.,param['dim'][1]-simu['val'],0.))
+	   p.PartitionEdgeByPoint(edge=e1[0], point=(param['dim'][0]/2.,param['dim'][1]-simu['val'],0.))
 	   p1=cylinder2D(param['dim'][0]/2.,param['dim'][1]-simu['val'],45,param['rad'])
 	 else:
 	   e1=p.edges.getByBoundingBox(yMin=param['dim'][1]*0.9, xMin=0.0)	 
- 	   p.PartitionEdgeByPoint(edge=e1[0], point=(simu['val'],param['dim'][1],0.))
+	   p.PartitionEdgeByPoint(edge=e1[0], point=(simu['val'],param['dim'][1],0.))
 	   p1=cylinder2D(simu['val'],param['dim'][1],0,param['rad'])
 	else:
 	 if simu['load']=='horizontal':
@@ -498,7 +498,7 @@ def post(idim,jobname,param,simu):
 	else:
 	 fid1.write('temps;   deplacement;      force;        \n')
 	#
-	for i1 in xrange(len(U2[0].data)):
+	for i1 in range(len(U2[0].data)):
 	  if idim==1:
 	   str1 = '{:5.0f};   {:+8.4e};   {:+8.4e};   {:+8.4f}  \n'.format(U2[0].data[i1][0],U2[0].data[i1][1],coef[idim]*RF2[0].data[i1][1],RM3[0].data[i1][1])
 	  else:

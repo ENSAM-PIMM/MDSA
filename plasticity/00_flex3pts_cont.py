@@ -420,7 +420,7 @@ def post_treat(jobname, idim, param):
   fid1.write('temps;   deplacement;      force;        moment;   \n')
  else:
   fid1.write('temps;   deplacement;      force;        \n')
- for i1 in xrange(len(U2[0].data)):
+ for i1 in range(len(U2[0].data)):
   if idim==1:
    str1 = '{:5.0f};   {:+8.4e};   {:+8.4e};   {:+8.4f}  \n'.format(U2[0].data[i1][0],U2[0].data[i1][1],coef[idim]*RF2[0].data[i1][1],RM3[0].data[i1][1])
   else:
