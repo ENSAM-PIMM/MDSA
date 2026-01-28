@@ -74,7 +74,7 @@ def quad_seg(n=1):
     
 def plot_bode(xyplot,n=0):
     ''' Plot Bode Diagrams  ''' 
-    plot.figure()
+    plot.figure(figsize=(8, 8))
     plot.loglog(xyplot['X'],np.abs(xyplot['Y'][:,n]))
     plot.xlabel(xyplot['Xlabel'])
     plot.ylabel(xyplot['Ylabel'][n])
@@ -86,7 +86,7 @@ def plot_bode(xyplot,n=0):
 #%%  Plot 2D figures 
 def plot2D(xyplot,style='-',xscale='linear',yscale='linear',xlim=[],ylim=[],gf=1,clf=0):
     ''' Plot 2D curves  ''' 
-    f2=plot.figure(num=gf);f2.clf()
+    f2=plot.figure(figsize=(6, 6), num=gf);f2.clf()
     plot.plot(xyplot['X'],xyplot['Y'],style)
     plot.xlabel(xyplot['Xlabel']);plot.ylabel(xyplot['Ylabel'])  
  
@@ -95,7 +95,7 @@ def plot2D(xyplot,style='-',xscale='linear',yscale='linear',xlim=[],ylim=[],gf=1
     plot.grid(); ax=plot.gca();ax.set_xscale(xscale); ax.set_yscale(yscale)
     if len(xlim)>0: ax.set_xlim(xlim)
     if len(ylim)>0: ax.set_ylim(ylim)
-    plot.show();RaiseFigure()
+    #plot.show();RaiseFigure()
 
 def plot2D1(xyplot,style='-', log_x=False, log_y=False, xlim=[],ylim=[],gf=1,clf=0):
     ''' Plot 2D curves  with plotly ''' 
@@ -106,8 +106,8 @@ def plot2D1(xyplot,style='-', log_x=False, log_y=False, xlim=[],ylim=[],gf=1,clf
 #%%  Plot Bode from frequency response
 def plotFreq(xy,style='-',xscale='linear',yscale='log',xlim=[],ylim=[],gf=1,clf=0):
 
-    f2=plot.figure(num=gf);f2.clf()
-    ax=f2.subplots(1,2)    
+    f2=plot.figure(figsize=(6,6), num=gf); f2.clf()
+    f2.subplots_adjust(left=-0.5) ; ax=f2.subplots(1,2)
     ax[0].plot(xy['X'],abs(xy['Y']),style)
     ax[0].set_xlabel(xy['Xlabel']);ax[0].set_ylabel(xy['Ylabel'])   
     if 'legend' in xy.keys(): plot.legend(xy['legend'])   
@@ -116,8 +116,9 @@ def plotFreq(xy,style='-',xscale='linear',yscale='log',xlim=[],ylim=[],gf=1,clf=
     if len(ylim)>0: plot.ylim(ylim)
     
     ax[1].plot(xy['X'],np.angle(xy['Y'],deg=True),style);ax[1].grid();
+    ax[1].set_xlabel(xy['Xlabel']);ax[1].set_ylabel('Phase (deg)')
 
-    plot.show();RaiseFigure()    
+    #plot.show();RaiseFigure()    
 
 
 #%%  Compute Fourier transform and plot
@@ -129,16 +130,16 @@ def plotFourier(xy,tmin=0,tmax=1e10,gf=2,fmax=0):
    Y=np.fft.fft(y.T);Y=Y.T; # Y.shape
    f=np.arange(0.,(y.shape[0]),1,'double')/y.shape[0]/(t[1]-t[0])
    indf=f<min(fmax,f[len(f)-1]/2); f=f[indf];Y=Y[indf]
-   f2=plot.figure(num=2);f2.clf()
-   ax=f2.subplots(1,2)    
+   f2=plot.figure(figsize=(6,6), num=gf);f2.clf()
+   f2.subplots_adjust(left=-0.5) ; ax=f2.subplots(1,2)    
    ax[0].semilogy(f*2*np.pi,np.abs(Y),':.')
-   ax[0].set_xlabel('Fréquence (rad/s)'); ax[0].set_ylabel('Amplitude')
+   ax[0].set_xlabel('Frequency (rad/s)'); ax[0].set_ylabel('Amplitude')
    ax[0].grid()
    ax[1].plot(f*2*np.pi,np.angle(Y,deg=True));ax[1].grid();
    ax[1].set_yscale('linear');
-   ax[1].set_xlabel('Fréquence (rad/s)');ax[1].set_ylabel('Phase')
+   ax[1].set_xlabel('Frequency (rad/s)');ax[1].set_ylabel('Phase')
    #ax[1].grid()
-   plot.show();RaiseFigure()
+   #plot.show();RaiseFigure()
    
 
 def RaiseFigure(gf=[]):

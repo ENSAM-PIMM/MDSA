@@ -41,7 +41,7 @@ def matrix_assembly(mo2, add_m=0.0, MROT=np.identity(12)):
 
 
 #%% load poppy mesh
-def load_poppy(filename='poppyse1.mat', pflag=1):
+def load_poppy(filename='D:/Cours/Vibration/PGE/old/2022_S7/ED78/poppyse1.mat', pflag=1):
  ''' Import Poppy model '''
  
  #import from MATLAB/SDT
