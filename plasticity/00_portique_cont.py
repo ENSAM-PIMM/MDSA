@@ -24,12 +24,12 @@ idim=1
 #name, dimensions of the sample [X,Y,Z], thickness, radius of cylinder,  
 #size of elements, linear/quadratic interpolation (False/True), plane strain/stress in 2D ('strain'/'stress'), radius of fillet
 param=dict([('name','sample'),('dim',[300.,220.,11.]), ('thickness',4.), ('rad',2.), 
-  ('selt',2.),('quad',True), ('type2d','stress'), ('radF',5.) ])
+  ('selt',1.),('quad',True), ('type2d','stress'), ('radF',5.) ])
 #name, density, Young modulus, Poisson ratio, initial yield stress, linear hardening coefficient 
 mat=dict([('name','steel'),('dens',7850.e-12),('E',2.1e5),('nu',0.3),('Re',400.),('E1',1.0e3)])
 #load direction ('vertical'/'horizontal'), imposed displacement, 
 #specific case (0-None; 1-BC; 2-distance; 3-angle), value for specific case (1-stiffness; 2-distance; 3-angle)
-simu=dict([('load','horizontal'),('dmax',30.), ('case',0), ('val',25)])
+simu=dict([('load','vertical'),('dmax',10.), ('case',0), ('val',25)])
 
 
 
@@ -171,18 +171,20 @@ def beam_geo(param,mat,simu):
 	#partition
 	if simu['case']==2:
 	 if simu['load']=='horizontal':
+	   yc=param['dim'][1]-param['radF']-param['rad']-simu['val']
 	   e1=p.edges.getByBoundingBox(xMin=param['dim'][0]*0.499)	 
-	   p.PartitionEdgeByPoint(edge=e1[0], point=(param['dim'][0]/2.,param['dim'][1]-simu['val'],0.))
-	   p1=cylinder2D(param['dim'][0]/2.,param['dim'][1]-simu['val'],45,param['rad'])
+	   p.PartitionEdgeByPoint(edge=e1[0], point=(param['dim'][0]/2.,yc,0.))
+	   p1=cylinder2D(param['dim'][0]/2.,yc,45,param['rad'])
 	 else:
 	   e1=p.edges.getByBoundingBox(yMin=param['dim'][1]*0.9, xMin=0.0)	 
 	   p.PartitionEdgeByPoint(edge=e1[0], point=(simu['val'],param['dim'][1],0.))
 	   p1=cylinder2D(simu['val'],param['dim'][1],0,param['rad'])
 	else:
 	 if simu['load']=='horizontal':
+	  yc=param['dim'][1]-param['radF']-param['rad']
 	  e1=p.edges.getByBoundingBox(xMin=param['dim'][0]*0.499)	 
-	  p.PartitionEdgeByPoint(edge=e1[0], point=(param['dim'][0]/2.,param['dim'][1]-2.*param['radF'],0.))
-	  p1=cylinder2D(param['dim'][0]/2.,param['dim'][1]-2.*param['radF'],45,param['rad'])
+	  p.PartitionEdgeByPoint(edge=e1[0], point=(param['dim'][0]/2.,yc,0.))
+	  p1=cylinder2D(param['dim'][0]/2.,yc,45,param['rad'])
 	 else:
 	  p1=cylinder2D(0.,param['dim'][1],0,param['rad'])
 			
@@ -190,7 +192,8 @@ def beam_geo(param,mat,simu):
 	p = mdb.models['Model-1'].parts[param['name']];v=p.vertices
 	v1 = v.getByBoundingBox(yMax=1.e-5);p.Set(vertices=v1, name='base');
 	v2 = v.getByBoundingSphere(center=(0.0, param['dim'][1], 0.0),radius=1.e-4);p.Set(vertices=v2, name='middle');
-	if simu['load']=='horizontal':v2 = v.getByBoundingSphere(center=(param['dim'][0]/2., param['dim'][1]-2.*param['radF'], 0.0),radius=1.e-4)
+	if simu['load']=='horizontal':v2 = v.getByBoundingSphere(center=(param['dim'][0]/2., yc, 0.0),radius=1.e-4)
+	if simu['load']=='vertical' and simu['case']==2: v2 = v.getByBoundingSphere(center=(simu['val'], param['dim'][1], 0.0),radius=1.e-4)
 	p.Set(vertices=v2, name='trav');p.Surface(name='top', side1Edges=(p.edges.getByBoundingBox(),))
 	
 	#beam section

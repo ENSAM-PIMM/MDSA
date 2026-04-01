@@ -25,11 +25,11 @@ idim=1
 #name, dimensions of the sample [X,Y,Z], radius of cylinder, space between fix points, 
 #size of elements, linear/quadratic interpolation (False/True), plane strain/stress in 2D ('strain'/'stress')
 param=dict([('name','sample'),('dim',[300., 14., 14.]), ('rad',5.), ('base',250.),
-  ('selt',2.),('quad',True), ('type2d','stress') ])
+  ('selt',1.),('quad',True), ('type2d','stress') ])
 #name, Density, Young modulus, Poisson ratio, initial yield stress, linear isotropic hardening coefficient 
 mat=dict([('name','steel'),('dens',7850.e-12),('E',2.1e5),('nu',0.3),('Re',300.),('E1',1.0e3)])
 #imposed displacement
-simu=dict([('dmax',30.)])
+simu=dict([('dmax',10.)])
 
 
 
